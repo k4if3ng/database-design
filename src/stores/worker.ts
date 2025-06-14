@@ -1,15 +1,13 @@
-// src/stores/worker.ts
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { workerService } from '@/services/worker'
-import type { RepairOrder } from '@/types'
+import type { Earning, RepairLog, RepairOrder, Performance } from '@/types'
 
 export const useWorkerStore = defineStore('worker', () => {
   const assignedOrders = ref<RepairOrder[]>([])
-  const processedOrders = ref<RepairOrder[]>([])
-  const pendingStats = ref<any>(null)
-  const earnings = ref<number>(0)
-  const detailedEarnings = ref<any>(null)
+  const repairLogs = ref<RepairLog[]>([])
+  const earnings = ref<Earning | null>(null)
+  const performance = ref<Performance | null>(null)
   const loading = ref(false)
 
   const fetchAssignedOrders = async () => {
@@ -25,13 +23,13 @@ export const useWorkerStore = defineStore('worker', () => {
     }
   }
 
-  const fetchProcessedOrders = async () => {
+  const fetchRepairLogs = async () => {
     try {
       loading.value = true
-      const response = await workerService.getProcessedOrders()
-      processedOrders.value = response.data
+      const response = await workerService.getRepairLogs()
+      repairLogs.value = response.data
     } catch (error) {
-      console.error('Failed to fetch processed orders:', error)
+      console.error('Failed to fetch repair logs:', error)
       throw error
     } finally {
       loading.value = false
@@ -39,57 +37,87 @@ export const useWorkerStore = defineStore('worker', () => {
   }
 
   const acceptOrder = async (orderId: number) => {
+    loading.value = true
     try {
-      const response = await workerService.acceptOrder({ orderId })
-      const index = assignedOrders.value.findIndex((order) => order.orderId === orderId)
+      const response = await workerService.acceptOrder(orderId)
+      
+      const index = assignedOrders.value.findIndex(order => order.id === orderId)
       if (index !== -1) {
-        assignedOrders.value[index] = response.data
+        assignedOrders.value[index].status = 'ACCEPTED'
       }
-      return response.data
+      
+      await fetchAssignedOrders()
+      
+      return response
     } catch (error) {
       console.error('Failed to accept order:', error)
       throw error
+    } finally {
+      loading.value = false
     }
   }
 
-  const rejectOrder = async (orderId: number) => {
+  const rejectOrder = async (orderId: number, reason: string) => {
+    if (!reason || reason.trim() === '') {
+      throw new Error('拒绝原因不能为空')
+    }
+    
+    loading.value = true
     try {
-      const response = await workerService.rejectOrder({ orderId })
-      assignedOrders.value = assignedOrders.value.filter((order) => order.orderId !== orderId)
-      return response.data
+      const response = await workerService.rejectOrder(orderId, { reason })
+      
+      const index = assignedOrders.value.findIndex(order => order.id === orderId)
+      if (index !== -1) {
+        assignedOrders.value[index].status = 'REJECTED'
+      }
+      
+      await fetchAssignedOrders()
+      
+      return response
     } catch (error) {
       console.error('Failed to reject order:', error)
       throw error
+    } finally {
+      loading.value = false
     }
   }
 
-  const updateOrder = async (updateData: {
-    orderId: number
-    status: string
-    description?: string
-    repairResult?: string
-    laborCost?: number
-    laborHours?: number
+  const completeOrder = async (orderId: number, data: {
+    laborHours: number
+    description: string
+    suggestion: string
+  }) => {
+    loading.value = true
+    try {
+      const response = await workerService.completeOrder(orderId, data)
+      
+      const index = assignedOrders.value.findIndex(order => order.id === orderId)
+      if (index !== -1) {
+        assignedOrders.value[index].status = 'COMPLETED'
+      }
+      
+      await fetchAssignedOrders()
+      
+      return response
+    } catch (error) {
+      console.error('Failed to complete order:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const addMaterial = async (orderId: number, data: {
+    name: string
+    quantity: number
+    unitPrice: number
+    supplier: string
   }) => {
     try {
-      const response = await workerService.updateOrder(updateData)
-      const index = assignedOrders.value.findIndex((order) => order.orderId === updateData.orderId)
-      if (index !== -1) {
-        assignedOrders.value[index] = response.data
-      }
-      return response.data
+      const response = await workerService.addMaterial(orderId, data)
+      return response
     } catch (error) {
-      console.error('Failed to update order:', error)
-      throw error
-    }
-  }
-
-  const fetchPendingStats = async () => {
-    try {
-      const response = await workerService.getPendingStats()
-      pendingStats.value = response.data
-    } catch (error) {
-      console.error('Failed to fetch pending stats:', error)
+      console.error('Failed to add material:', error)
       throw error
     }
   }
@@ -104,30 +132,29 @@ export const useWorkerStore = defineStore('worker', () => {
     }
   }
 
-  const fetchDetailedEarnings = async () => {
+  const fetchPerformance = async () => {
     try {
-      const response = await workerService.getDetailedEarnings()
-      detailedEarnings.value = response.data
+      const response = await workerService.getPerformance()
+      performance.value = response.data
     } catch (error) {
-      console.error('Failed to fetch detailed earnings:', error)
+      console.error('Failed to fetch performance:', error)
       throw error
     }
   }
 
   return {
     assignedOrders,
-    processedOrders,
-    pendingStats,
+    repairLogs,
     earnings,
-    detailedEarnings,
+    performance,
     loading,
     fetchAssignedOrders,
-    fetchProcessedOrders,
+    fetchRepairLogs,
     acceptOrder,
     rejectOrder,
-    updateOrder,
-    fetchPendingStats,
+    completeOrder,
+    addMaterial,
     fetchEarnings,
-    fetchDetailedEarnings,
+    fetchPerformance
   }
 })

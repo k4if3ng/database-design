@@ -38,15 +38,26 @@ export const useUserStore = defineStore('user', () => {
     repairOrderId: number
     rating: number
     content: string
+    category: string
   }) => {
     try {
-      const response = await userService.submitFeedback(feedbackData)
-      const updatedOrder = response.data
-      const index = repairOrders.value.findIndex(order => order.orderId === feedbackData.repairOrderId)
-      if (index !== -1) {
-        repairOrders.value[index] = updatedOrder
+      const payload = {
+        OrderId: feedbackData.repairOrderId,
+        rating: feedbackData.rating,
+        content: feedbackData.content,
+        category: feedbackData.category,
       }
-      return updatedOrder
+      const response = await userService.submitFeedback(payload)
+      const feedback = response.data
+      const index = repairOrders.value.findIndex(order => order.id === feedbackData.repairOrderId)
+      if (index !== -1) {
+        repairOrders.value[index] = {
+          ...repairOrders.value[index],
+          feedbackId: feedback.id,
+          hasFeedback: true
+        }
+      }
+      return feedback
     } catch (error) {
       console.error('Failed to submit feedback:', error)
       throw error

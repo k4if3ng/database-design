@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from 'axios'
 import type { AxiosResponse } from 'axios'
 import type { ApiResponse, ErrorResponse } from '@/types'

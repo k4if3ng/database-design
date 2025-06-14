@@ -58,21 +58,26 @@ const router = createRouter({
           name: 'WorkerDashboard',
           component: () => import('@/views/worker/Dashboard.vue'),
         },
-        // {
-        //   path: 'assigned-orders',
-        //   name: 'WorkerAssignedOrders',
-        //   component: () => import('@/views/worker/AssignedOrders.vue'),
-        // },
-        // {
-        //   path: 'processed-orders',
-        //   name: 'WorkerProcessedOrders',
-        //   component: () => import('@/views/worker/ProcessedOrders.vue'),
-        // },
-        // {
-        //   path: 'earnings',
-        //   name: 'WorkerEarnings',
-        //   component: () => import('@/views/worker/Earnings.vue'),
-        // },
+        {
+          path: 'assigned-orders',
+          name: 'WorkerAssignedOrders',
+          component: () => import('@/views/worker/AssignedOrders.vue'),
+        },
+        {
+          path: 'pending-orders',
+          name: 'WorkerPendingOrders',
+          component: () => import('@/views/worker/PendingOrders.vue'),
+        },
+        {
+          path: 'processed-orders',
+          name: 'WorkerProcessedOrders',
+          component: () => import('@/views/worker/ProcessedOrders.vue'),
+        },
+        {
+          path: 'earnings',
+          name: 'WorkerEarnings',
+          component: () => import('@/views/worker/Earnings.vue'),
+        },
       ],
     },
     {

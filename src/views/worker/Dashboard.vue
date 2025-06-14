@@ -1,22 +1,21 @@
-<!-- src/views/user/Dashboard.vue -->
 <template>
   <div class="dashboard">
-    <h1>用户仪表板</h1>
+    <h1>维修人员仪表板</h1>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <h3>车辆数量</h3>
-        <p class="stat-number">{{ vehicles.length }}</p>
+        <h3>分配工单</h3>
+        <p class="stat-number">{{ assignedOrders.length }}</p>
       </div>
 
       <div class="stat-card">
-        <h3>维修工单</h3>
-        <p class="stat-number">{{ repairOrders.length }}</p>
+        <h3>已完成工单</h3>
+        <p class="stat-number">{{ completedOrders.length }}</p>
       </div>
 
       <div class="stat-card">
-        <h3>已完成维修</h3>
-        <p class="stat-number">{{ repairLogs.length }}</p>
+        <h3>总收入</h3>
+        <p class="stat-number">￥{{ totalEarnings.toFixed(2) }}</p>
       </div>
 
       <div class="stat-card">
@@ -26,11 +25,11 @@
     </div>
 
     <div class="recent-orders">
-      <h2>最近的维修工单</h2>
+      <h2>最近分配的工单</h2>
       <div class="order-list">
-        <div v-for="order in recentOrders" :key="order.orderId" class="order-item">
+        <div v-for="order in recentOrders" :key="order.id" class="order-item">
           <div class="order-info">
-            <h4>{{ order.description }}</h4>
+            <h4>{{ order.issue }}</h4>
             <p>车牌号: {{ order.licensePlate }}</p>
             <p>状态: {{ getStatusText(order.status) }}</p>
           </div>
@@ -47,28 +46,43 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useUserStore } from '@/stores/user'
+import { ref, computed, onMounted } from 'vue'
+import { workerService } from '@/services/worker'
 
-const userStore = useUserStore()
+interface Order {
+  id: number
+  issue: string
+  licensePlate: string
+  status: string
+  createTime: string
+  laborCost?: number
+  rating?: number
+}
 
-const { vehicles, repairOrders, repairLogs } = userStore
+const assignedOrders = ref<Order[]>([])
+const completedOrders = computed(() =>
+  assignedOrders.value.filter(order => order.status === 'COMPLETED'),
+)
+
+const totalEarnings = computed(() =>
+  assignedOrders.value.reduce((acc, order) => acc + (order.laborCost || 0), 0),
+)
+
+const averageRating = computed(() => {
+  const completed = completedOrders.value
+  if (completed.length === 0) return 0
+  const sum = completed.reduce((acc, order) => acc + (order.rating || 0), 0)
+  return sum / completed.length
+})
 
 const recentOrders = computed(() =>
-  repairOrders
+  assignedOrders.value
     .slice(0, 5)
     .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime()),
 )
 
-const averageRating = computed(() => {
-  if (repairLogs.length === 0) return 0
-  const sum = repairLogs.reduce((acc, log) => acc + log.rating, 0)
-  return sum / repairLogs.length
-})
-
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
-    SUBMITTED: '已提交',
     ASSIGNED: '已分配',
     ACCEPTED: '已接受',
     IN_PROGRESS: '维修中',
@@ -83,17 +97,18 @@ const formatDate = (dateString: string) => {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    userStore.fetchVehicles(),
-    userStore.fetchRepairOrders(),
-    userStore.fetchRepairLogs(),
-  ])
+  const response = await workerService.getAssignedOrders()
+  assignedOrders.value = response.data
 })
 </script>
 
 <style scoped>
 .dashboard {
+  min-height: 100vh;
+  width: 80vw;
   padding: 1.5rem;
+  background: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
+  box-sizing: border-box;
 }
 
 .stats-grid {
@@ -161,10 +176,6 @@ onMounted(async () => {
   font-weight: bold;
 }
 
-.status.submitted {
-  background: #e3f2fd;
-  color: #1976d2;
-}
 .status.assigned {
   background: #fff3e0;
   color: #f57c00;

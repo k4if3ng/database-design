@@ -7,31 +7,20 @@
     </div>
     <div v-else>
       <div class="orders-grid">
-        <div v-for="order in repairOrders" :key="order.orderId" class="order-card">
+        <div v-for="order in repairOrders" :key="order.id" class="order-card">
           <div class="order-header">
-            <h2>工单 #{{ order.orderId }}</h2>
+            <h2>工单 #{{ order.id }}</h2>
             <span class="status">{{ getStatusText(order.status) }}</span>
           </div>
-  <div class="order-details">
-    <p><strong>描述:</strong> {{ order.issue }}</p>
-    <p><strong>创建时间:</strong> {{ formatDate(order.createTime) }}</p>
-    <p v-if="order.assignTime"><strong>分配时间:</strong> {{ formatDate(order.assignTime) }}</p>
-    <p v-if="order.acceptTime"><strong>接受时间:</strong> {{ formatDate(order.acceptTime) }}</p>
-    <p v-if="order.completeTime"><strong>完成时间:</strong> {{ formatDate(order.completeTime) }}</p>
-    <p><strong>车辆信息:</strong> {{ order.licensePlate }}</p>
-    <p v-if="order.workerName"><strong>维修工:</strong> {{ order.workerName }} ({{ order.specialty }})</p>
-    <p v-if="order.laborCost"><strong>人工费用:</strong> ¥{{ order.laborCost.toFixed(2) }}</p>
-    <p v-if="order.materialCost"><strong>材料费用:</strong> ¥{{ order.materialCost.toFixed(2) }}</p>
-    <p v-if="order.totalCost"><strong>总费用:</strong> ¥{{ order.totalCost.toFixed(2) }}</p>
-    <!-- <p v-if="order.cannotReject"><strong>不可拒绝:</strong> 是</p> -->
-    <p v-if="order.repairResult"><strong>维修结果:</strong> {{ order.repairResult }}</p>
-    <ul v-if="order.materials && order.materials.length">
-      <h3>材料清单:</h3>
-      <li v-for="material in order.materials" :key="material.id">
-        {{ material.name }} - 数量: {{ material.quantity }} - 总价: ¥{{ material.totalCost }}
-      </li>
-    </ul>
-  </div>
+          <div class="order-details">
+            <p><strong>描述:</strong> {{ order.issue }}</p>
+            <p><strong>创建时间:</strong> {{ formatDate(order.createTime) }}</p>
+            <p v-if="order.assignTime"><strong>分配时间:</strong> {{ formatDate(order.assignTime) }}</p>
+            <p v-if="order.estimatedCompletionTime"><strong>预期完成时间:</strong> {{ formatDate(order.estimatedCompletionTime) }}</p>
+            <p><strong>车辆信息:</strong> {{ order.licensePlate }}</p>
+            <p v-if="order.workerName"><strong>维修工:</strong> {{ order.workerName }} </p>
+            <p v-if="order.repairResult"><strong>维修结果:</strong> {{ order.repairResult }}</p>
+          </div>
           <div class="order-actions">
             <button
               v-if="!order.hasFeedback"
@@ -144,6 +133,7 @@ export default defineComponent({
         await storeSubmitFeedback({
           ...feedbackForm,
           rating: Number(feedbackForm.rating),
+          category: '用户反馈', // 请根据实际需求修改类别
         })
         alert('反馈提交成功')
         closeFeedbackModal()

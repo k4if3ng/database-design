@@ -2,11 +2,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authService } from '@/services/auth'
-import type { User, LoginRequest, LoginResponse } from '@/types'
+import type { User, Worker, LoginRequest, LoginResponse } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
-  const user = ref<User | null>(null)
+  const user = ref<User | Worker | null>(null)
   const userRole = ref<string | null>(localStorage.getItem('userRole'))
 
   const isAuthenticated = computed(() => !!token.value)
@@ -65,6 +65,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const updateUserInfo = async (data: Partial<User>) => {
+    try {
+      if (isUser.value) {
+        user.value = (await authService.updateUserInfo(data)).data
+      }
+    } catch (error) {
+      console.error('Failed to update user info:', error)
+    }
+  }
+
   return {
     token,
     user,
@@ -76,5 +86,6 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     fetchUserInfo,
+    updateUserInfo
   }
 })

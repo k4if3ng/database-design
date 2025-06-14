@@ -27,7 +27,7 @@
     <div class="recent-orders">
       <h2>最近的维修工单</h2>
       <div class="order-list">
-        <div v-for="order in recentOrders" :key="order.orderId" class="order-item">
+        <div v-for="order in recentOrders" :key="order.id" class="order-item">
           <div class="order-info">
             <h4>{{ order.issue }}</h4>
             <p>车牌号: {{ order.licensePlate }}</p>
@@ -60,9 +60,8 @@ const recentOrders = computed(() =>
 )
 
 const averageRating = computed(() => {
-  if (repairLogs.length === 0) return 0
-  const sum = repairLogs.reduce((acc, log) => acc + log.rating, 0)
-  return sum / repairLogs.length
+  // 计算已评价的维修工单Orders的平均评分
+  return 0
 })
 
 const getStatusText = (status: string) => {

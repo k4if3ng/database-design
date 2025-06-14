@@ -22,6 +22,7 @@ export interface Worker {
   workerName: string
   specialty: string
   hourlyWage: number
+  baseSalary: number
   totalEarnings: number
 }
 
@@ -35,44 +36,44 @@ export interface Vehicle {
 }
 
 export interface RepairOrder {
-  orderId: number
+  id: number
   issue: string
   status: string
-  createTime: string
   vehicleId: number
   licensePlate: string
-  materials?: Material[]
   workerId?: number
   workerName?: string
-  specialty?: string
+  createTime: string
   assignTime?: string
-  acceptTime?: string
-  completeTime?: string
-  laborCost?: number
-  materialCost?: number
-  totalCost?: number
-  cannotReject?: boolean
+  estimatedCompletionTime?: string
   repairType?: string
   repairSolution?: string
-  diagnosis?: string
-  estimatedCompletionTime?: string
   repairResult?: string
   feedbackId?: number
   hasFeedback?: boolean
+  // worker
+  vehicleInfo?: Partial<Vehicle>
+  customerPhone?: string
 }
 
 export interface RepairLog {
-  logId: number
-  issue: string
-  repairResult: string
-  submitTime: string
-  completionTime: string
-  rating: number
-  totalCost: number
+  id: number
+  orderId: number
   vehicleId: number
   licensePlate: string
-  vehicleBrand: string
-  vehicleModel: string
+  issue: string
+  repairDescription: string
+  materialsCost: number
+  laborCost: number
+  totalCost: number
+  total: number
+  workerName: string
+  submitTime: string
+  completionTime: string
+  // worker
+  vehicleInfo?: Partial<Vehicle>
+  laborHours?: number
+  completeTime?: string
 }
 
 export interface LoginRequest {
@@ -99,22 +100,18 @@ export interface Material {
   orderId: number
   name: string
   quantity: number
-  price: number
+  unitPrice: number
   totalCost: number
+  supplier: string
 }
 
 export interface Feedback {
   id: number
-  repairOrderId: number
+  OrderId: number
   rating: number
   content: string
+  category: string
   submitTime: string
-  orderId: number
-  issue: string
-  status: string
-  createTime: string
-  vehicleId: number
-  licensePlate: string
 }
 
 export interface SubmitRepairRequest {
@@ -132,4 +129,29 @@ export interface SystemStats {
   totalRepairOrders: number
   completedRepairOrders: number
   averageCustomerRating: number
+}
+
+export interface ProcessOrderRes {
+  id: number
+  status: string
+  acceptTime?: string
+  rejectTime?: string
+  completeTime?: string
+  laborHours?: number
+  laborCost?: number
+  totalCost?: number
+}
+
+export interface Earning {
+  totalEarnings: number
+  thisMonthEarnings: number
+  completedOrders: number
+  averageOrderValue: number
+}
+
+export interface Performance {
+  completionRate: number
+  averageRating: number
+  totalWorkHours: number
+  OnTimeCompletionRate: number
 }
