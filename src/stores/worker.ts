@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { workerService } from '@/services/worker'
-import type { Earning, RepairLog, RepairOrder, Performance } from '@/types'
+import type { Earning, RepairLog, RepairOrder, WorkerPerformance } from '@/types'
 
 export const useWorkerStore = defineStore('worker', () => {
   const assignedOrders = ref<RepairOrder[]>([])
   const repairLogs = ref<RepairLog[]>([])
   const earnings = ref<Earning | null>(null)
-  const performance = ref<Performance | null>(null)
+  const workerPerformance = ref<WorkerPerformance | null>(null)
   const loading = ref(false)
 
   const fetchAssignedOrders = async () => {
@@ -132,12 +132,12 @@ export const useWorkerStore = defineStore('worker', () => {
     }
   }
 
-  const fetchPerformance = async () => {
+  const fetchWorkerPerformance = async () => {
     try {
-      const response = await workerService.getPerformance()
-      performance.value = response.data
+      const response = await workerService.getWorkerPerformance()
+      workerPerformance.value = response.data as unknown as WorkerPerformance
     } catch (error) {
-      console.error('Failed to fetch performance:', error)
+      console.error('Failed to fetch WorkerPerformance:', error)
       throw error
     }
   }
@@ -146,7 +146,7 @@ export const useWorkerStore = defineStore('worker', () => {
     assignedOrders,
     repairLogs,
     earnings,
-    performance,
+    workerPerformance,
     loading,
     fetchAssignedOrders,
     fetchRepairLogs,
@@ -155,6 +155,6 @@ export const useWorkerStore = defineStore('worker', () => {
     completeOrder,
     addMaterial,
     fetchEarnings,
-    fetchPerformance
+    fetchWorkerPerformance
   }
 })

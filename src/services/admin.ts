@@ -1,111 +1,156 @@
-// src/services/admin.ts
 import api from './api'
-import type { User, Worker, RepairLog, RepairOrder, SystemStats, ApiResponse } from '@/types'
+import type {
+  User,
+  Worker,
+  RepairLog,
+  RepairOrder,
+  ApiResponse,
+  BatchSubmitOrders,
+  MonthlySettlement,
+  VehicleRepairStats,
+  CostAnalysis,
+  NegativeFeedback,
+  SpecialtyWorkload,
+  PendingTasks,
+  RollBack,
+  BatchDeleteOrders,
+  AuditLog,
+  AdminStatisticsOverview,
+  BlockchainProof,
+  SystemHealth,
+  SystemStatus,
+} from '@/types'
 
 export const adminService = {
-  // 查询所有用户
-  getAllUsers(): Promise<ApiResponse<User[]>> {
-    return api.get('/admin/query/user').then((res) => res.data)
+  // 获取所有用户
+  async getAllUsers(): Promise<ApiResponse<User[]>> {
+    return api.get('/v1/users').then((res) => res.data)
   },
 
-  // 查询所有维修人员
-  getAllWorkers(): Promise<ApiResponse<Worker[]>> {
-    return api.get('/admin/query/worker').then((res) => res.data)
+  // 获取所有维修人员
+  async getAllWorkers(): Promise<ApiResponse<Worker[]>> {
+    return api.get('/v1/workers').then((res) => res.data)
   },
 
-  // 查询所有维修记录
-  getAllRepairLogs(): Promise<ApiResponse<RepairLog[]>> {
-    return api.get('/admin/query/repair-log').then((res) => res.data)
+  // 获取所有维修记录
+  async getAllRepairLogs(): Promise<ApiResponse<RepairLog[]>> {
+    return api.get('/v1/users/repair-logs').then((res) => res.data)
   },
 
-  // 查询所有维修工单
-  getAllRepairOrders(): Promise<ApiResponse<RepairOrder[]>> {
-    return api.get('/admin/query/repair-order').then((res) => res.data)
+  // 获取所有维修工单
+  async getAllRepairOrders(): Promise<ApiResponse<RepairOrder[]>> {
+    return api.get('/v1/repair-orders').then((res) => res.data)
   },
 
-  // 获取系统统计数据
-  getSystemStats(): Promise<ApiResponse<SystemStats>> {
-    return api.get('/admin/monitor-info').then((res) => res.data)
+  // 分配工单
+  async assignRepairOrder(orderId: number, data: {
+    workerId: number
+    priority: string
+    estimatedHours: number
+    notes: string
+  }): Promise<ApiResponse<RepairOrder>> {
+    return api.put(`/v1/repair-orders/${orderId}/assign`, data).then((res) => res.data)
   },
 
-  // 执行月度结算
-  executeMonthlySettlement(data: {
+  // 批量提交维修工单
+  async batchSubmitOrders(data: {
+    orders: {
+      vehicleId: number
+      issue: string
+      repairType: string
+      additionalInfo?: string
+      priority?: string
+    }[]
+  }): Promise<ApiResponse<BatchSubmitOrders>> {
+    return api.post('/v1/repairs/batch-submit', data).then((res) => res.data)
+  },
+
+  // 月度结算
+  async executeMonthlySettlement(data: {
     year: number
     month: number
-    settleIncomplete?: boolean
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<MonthlySettlement[]>> {
     return api.post('/admin/monthly-settlement', data).then((res) => res.data)
   },
 
-  // 获取工人结算记录
-  getWorkerSettlements(params?: {
-    year?: number
-    month?: number
-    workerId?: number
-    status?: string
-  }): Promise<ApiResponse<any[]>> {
-    return api.get('/admin/worker-settlements', { params }).then((res) => res.data)
+  // 获取车型维修统计
+  async getVehicleRepairStats(): Promise<ApiResponse<VehicleRepairStats[]>> {
+    return api.get('/statistics/vehicle-repair-stats').then((res) => res.data)
   },
 
-  // 车型维修统计
-  getVehicleTypeStats(params?: {
-    startDate?: string
-    endDate?: string
-    vehicleType?: string
-  }): Promise<ApiResponse<any>> {
-    return api.get('/statistics/vehicle-types', { params }).then((res) => res.data)
-  },
-
-  // 成本分析
-  getCostAnalysis(params: {
+  // 获取维修费用构成分析
+  async getCostAnalysis(params: {
     period: string
     year: number
-    quarter?: number
     month?: number
-    repairType?: string
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<CostAnalysis>> {
     return api.get('/statistics/cost-analysis', { params }).then((res) => res.data)
   },
 
-  // 负面反馈统计
-  getNegativeFeedback(params?: {
+  // 获取负面反馈统计
+  async getNegativeFeedback(params?: {
+    rating?: number
     startDate?: string
     endDate?: string
-    workerId?: number
-    repairType?: string
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<NegativeFeedback>> {
     return api.get('/statistics/negative-feedback', { params }).then((res) => res.data)
   },
 
-  // 工种任务统计
-  getSpecialtyWorkload(params?: {
+  // 获取工种任务统计
+  async getSpecialtyWorkload(params?: {
     startDate?: string
     endDate?: string
-    status?: string
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<SpecialtyWorkload[]>> {
     return api.get('/statistics/specialty-workload', { params }).then((res) => res.data)
   },
 
-  // 未完成任务统计
-  getPendingOrdersStats(params?: {
-    groupBy?: string
-    status?: string
-    minDays?: number
-  }): Promise<ApiResponse<any>> {
-    return api.get('/statistics/pending-orders', { params }).then((res) => res.data)
+  // 获取未完成任务统计
+  async getPendingTasks(): Promise<ApiResponse<PendingTasks>> {
+    return api.get('/statistics/pending-tasks').then((res) => res.data)
+  },
+
+  // 数据回滚
+  async rollbackRepairOrder(orderId: number, data: {
+    reason: string
+    rollbackToStatus: string
+  }): Promise<ApiResponse<RollBack>> {
+    return api.post(`/v1/rollback/repair-order/${orderId}`, data).then((res) => res.data)
+  },
+
+  // 批量删除工单
+  async batchDeleteOrders(data: number[]): Promise<ApiResponse<BatchDeleteOrders>> {
+    return api.delete('/v1/repair-orders/batch', { data }).then((res) => res.data)
   },
 
   // 查询审计日志
-  getAuditLogs(params?: {
-    entityType?: string
-    entityId?: number
+  async getAuditLogs(params?: {
     action?: string
-    startTime?: string
-    endTime?: string
-    username?: string
+    entityType?: string
+    startDate?: string
+    endDate?: string
     page?: number
     size?: number
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<AuditLog>> {
     return api.get('/admin/audit-logs', { params }).then((res) => res.data)
+  },
+
+  // 获取区块链证明
+  async getBlockchainProof(orderId: number): Promise<ApiResponse<BlockchainProof>> {
+    return api.get(`/admin/blockchain-proof/${orderId}`).then((res) => res.data)
+  },
+
+  // 获取系统统计概览
+  async getAdminStatisticsOverview(): Promise<ApiResponse<AdminStatisticsOverview>> {
+    return api.get('/v1/statistics/overview').then((res) => res.data)
+  },
+
+  // 系统健康检查
+  async getSystemHealth(): Promise<ApiResponse<SystemHealth>> {
+    return api.get('/test/health').then((res) => res.data)
+  },
+
+  // 获取系统状态
+  async getSystemStatus(): Promise<ApiResponse<SystemStatus>> {
+    return api.get('/admin/system/status').then((res) => res.data)
   },
 }

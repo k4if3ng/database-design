@@ -83,6 +83,7 @@ const getStatusText = (status: string) => {
     ASSIGNED: '已分配',
     ACCEPTED: '已接受',
     IN_PROGRESS: '维修中',
+    PENDING_ASSIGNMENT: '待分配',
     COMPLETED: '已完成',
     REJECTED: '已拒绝',
   }

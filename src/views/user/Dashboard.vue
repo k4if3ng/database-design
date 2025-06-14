@@ -15,7 +15,7 @@
 
       <div class="stat-card">
         <h3>已完成维修</h3>
-        <p class="stat-number">{{ repairLogs.length }}</p>
+        <p class="stat-number">{{ completedRepairs }}</p>
       </div>
 
       <div class="stat-card">
@@ -59,6 +59,10 @@ const recentOrders = computed(() =>
     .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime()),
 )
 
+const completedRepairs = computed(() => 
+  repairOrders.filter(order => order.status === 'COMPLETED').length
+)
+
 const averageRating = computed(() => {
   // 计算已评价的维修工单Orders的平均评分
   return 0
@@ -69,6 +73,7 @@ const getStatusText = (status: string) => {
     SUBMITTED: '已提交',
     ASSIGNED: '已分配',
     ACCEPTED: '已接受',
+    PENDING_ASSIGNMENT: '待分配',
     IN_PROGRESS: '维修中',
     COMPLETED: '已完成',
     REJECTED: '已拒绝',
@@ -186,5 +191,9 @@ onMounted(async () => {
 .status.rejected {
   background: #ffebee;
   color: #d32f2f;
+}
+.status.pending_assignment {
+  background: #f3e5f5;
+  color: #8e24aa;
 }
 </style>

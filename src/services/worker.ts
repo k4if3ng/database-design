@@ -1,5 +1,5 @@
 import api from './api'
-import type { RepairOrder, Material, ApiResponse, ProcessOrderRes, Earning, Performance, RepairLog } from '@/types'
+import type { RepairOrder, Material, ApiResponse, ProcessOrderRes, Earning, WorkerPerformance, RepairLog } from '@/types'
 
 export const workerService = {
   // 获取分配的工单
@@ -44,7 +44,7 @@ export const workerService = {
   },
 
   // 查询绩效
-  async getPerformance(): Promise<ApiResponse<Performance>> {
+  async getWorkerPerformance(): Promise<ApiResponse<Performance>> {
     return api.get('/v1/performance').then((res) => res.data)
   },
 

@@ -27,23 +27,23 @@
           </router-link>
         </li>
         <li>
-          <router-link to="/worker/assigned-orders" class="nav-link">
-            <span>分配工单</span>
+          <router-link to="/worker/orders" class="nav-link">
+            <span>工单列表</span>
           </router-link>
         </li>
         <li>
-          <router-link to="/worker/processed-orders" class="nav-link">
-            <span>已处理工单</span>
+          <router-link to="/worker/orders/:id" class="nav-link">
+            <span>工单详情</span>
           </router-link>
         </li>
         <li>
-          <router-link to="/worker/pending-orders" class="nav-link">
-            <span>工单统计</span>
+          <router-link to="/worker/repair-logs" class="nav-link">
+            <span>维修记录</span>
           </router-link>
         </li>
         <li>
-          <router-link to="/worker/earnings" class="nav-link">
-            <span>工资收入</span>
+          <router-link to="/worker/performance" class="nav-link">
+            <span>绩效与收入</span>
           </router-link>
         </li>
       </ul>
@@ -64,7 +64,7 @@ import { onMounted, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
-import type { Worker } from '@/types/index'
+import type { Worker } from '@/types'
 
 const router = useRouter()
 const authStore = useAuthStore()
