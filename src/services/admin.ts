@@ -52,15 +52,6 @@ export const adminService = {
     return api.put(`/v1/repair-orders/${orderId}/assign`, data).then((res) => res.data)
   },
 
-  // 批量提交维修工单
-  async batchSubmitOrders(data: {
-    batchId?: number
-    processedCount: number
-    orders: Partial<RepairOrder>[]
-  }): Promise<ApiResponse<BatchSubmitOrders>> {
-    return api.post('/v1/repairs/batch-submit', data).then((res) => res.data)
-  },
-
   // 月度结算
   async executeMonthlySettlement(data: Partial<RepairOrder>): Promise<ApiResponse<MonthlySettlement[]>> {
     return api.post('/admin/monthly-settlement', data).then((res) => res.data)
@@ -113,11 +104,21 @@ export const adminService = {
   },
 
   // 数据回滚
-  async rollbackRepairOrder(orderId: number, data: {
-    reason: string
-    rollbackToStatus: string
-  }): Promise<ApiResponse<RollBack>> {
-    return api.post(`/admin/repair-orders/{orderId}/rollback`, data).then((res) => res.data)
+  // async rollbackRepairOrder(orderId: number, data: {
+  //   reason: string
+  //   rollbackToStatus: string
+  //   targetTimestamp: string
+  // }): Promise<ApiResponse<RollBack>> {
+  //   return api.post(`/admin/repair-order/${orderId}/rollback`, data).then((res) => res.data)
+  // },
+  // admin.ts 服务中的修改
+  async rollbackRepairOrder(orderId: number, params: { targetTimestamp: string }): Promise<ApiResponse<any>> {
+    // 使用URLSearchParams构建查询参数
+    const queryParams = new URLSearchParams();
+    queryParams.append('targetTimestamp', params.targetTimestamp);
+  
+    // 发送请求，将参数作为查询字符串
+    return api.post(`/admin/repair-order/${orderId}/rollback?${queryParams.toString()}`).then((res) => res.data);
   },
 
   // 批量删除工单

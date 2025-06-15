@@ -1,7 +1,10 @@
 <template>
   <div class="login-container">
+    <div class="login-header">
+      <h1 class="main-title">汽车维修管理系统</h1>
+    </div>
     <div class="login-form">
-    <h2>登录</h2>
+      <h2 class="sub-title">登录</h2>
 
       <div class="role-tabs">
         <button
@@ -36,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+// 脚本部分保持不变
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -81,11 +85,32 @@ const handleLogin = async () => {
 <style scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
   width: 100vw;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.main-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0 0 1rem 0;
+}
+
+.sub-title {
+  color: #333;
+  font-size: 2.0rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .login-form {

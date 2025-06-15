@@ -9,6 +9,7 @@ export const useUserStore = defineStore('user', () => {
   const repairOrders = ref<RepairOrder[]>([])
   const repairLogs = ref<RepairLog[]>([])
   const loading = ref(false)
+  const error = ref<string | null>(null)  
 
   const fetchVehicles = async () => {
     try {
@@ -107,16 +108,48 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const batchSubmitOrders = async (data: {
+    repairs: Partial<RepairOrder>[]
+  }) => {
+    try {
+      loading.value = true
+      error.value = null
+      const response = await userService.batchSubmitOrders({
+        batchRequest: data.repairs
+      })
+      if (response.success) {
+        // 刷新订单列表以获取新添加的订单
+        await fetchRepairOrders()
+      }
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '批量提交工单失败'
+      error.value = errorMessage
+      console.error('Failed to batch submit orders:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const clearError = () => {
+    error.value = null
+  }
+
+
   return {
     vehicles,
     repairOrders,
     repairLogs,
     loading,
+    error,
     fetchVehicles,
     addVehicle,
     fetchRepairOrders,
     fetchRepairLogs,
     submitRepair,
     submitFeedback,
+    batchSubmitOrders,  // 导出新函数
+    clearError
   }
 })

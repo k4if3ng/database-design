@@ -7,10 +7,6 @@
           <span class="stat-label">总人数:</span>
           <span class="stat-value">{{ workers.length }}</span>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">活跃人数:</span>
-          <span class="stat-value">{{ activeWorkers }}</span>
-        </div>
       </div>
     </div>
 
@@ -28,11 +24,6 @@
             {{ specialty }}
           </option>
         </select>
-        <select v-model="statusFilter" class="filter-select">
-          <option value="">所有状态</option>
-          <option value="ACTIVE">活跃</option>
-          <option value="INACTIVE">不活跃</option>
-        </select>
       </div>
     </div>
 
@@ -49,7 +40,6 @@
             <th>时薪</th>
             <th>基础工资</th>
             <th>总收入</th>
-            <th>状态</th>
             <th>当前工单</th>
             <th>完成工单</th>
             <th>操作</th>
@@ -63,11 +53,6 @@
             <td>￥{{ formatNumber(worker.hourlyWage) }}</td>
             <td>￥{{ formatNumber(worker.baseSalary) }}</td>
             <td>￥{{ formatNumber(worker.totalEarnings) }}</td>
-            <td>
-              <span :class="['status', getStatusClass(worker.status)]">
-                {{ getStatusText(worker.status) }}
-              </span>
-            </td>
             <td>{{ worker.currentOrders || 0 }}</td>
             <td>{{ worker.completedOrders || 0 }}</td>
             <td>
@@ -92,7 +77,6 @@
               <p><strong>ID:</strong> {{ selectedWorker?.workerId }}</p>
               <p><strong>姓名:</strong> {{ selectedWorker?.workerName || '未知' }}</p>
               <p><strong>专业:</strong> {{ selectedWorker?.specialty || '未知' }}</p>
-              <p><strong>状态:</strong> {{ getStatusText(selectedWorker?.status) }}</p>
             </div>
             <div class="detail-section">
               <h4>薪资信息</h4>
@@ -125,7 +109,6 @@ const error = computed(() => adminStore.error)
 
 const searchQuery = ref('')
 const specialtyFilter = ref('')
-const statusFilter = ref('')
 const showWorkerModal = ref(false)
 const selectedWorker = ref<Worker | null>(null)
 
@@ -136,10 +119,6 @@ const specialties = computed(() => {
       .filter(specialty => specialty) // 过滤掉空值
   )
   return Array.from(uniqueSpecialties)
-})
-
-const activeWorkers = computed(() => {
-  return workers.value.filter(worker => worker.status === 'ACTIVE').length
 })
 
 const filteredWorkers = computed(() => {
@@ -156,10 +135,6 @@ const filteredWorkers = computed(() => {
     filtered = filtered.filter(worker => worker.specialty === specialtyFilter.value)
   }
   
-  if (statusFilter.value) {
-    filtered = filtered.filter(worker => worker.status === statusFilter.value)
-  }
-  
   return filtered
 })
 
@@ -169,24 +144,6 @@ const formatNumber = (value: number | undefined | null): string => {
     return '0.00'
   }
   return value.toFixed(2)
-}
-
-// 获取状态样式类
-const getStatusClass = (status: string | undefined): string => {
-  if (!status) return 'unknown'
-  return status.toLowerCase()
-}
-
-// 获取状态文本
-const getStatusText = (status: string | undefined): string => {
-  switch (status) {
-    case 'ACTIVE':
-      return '活跃'
-    case 'INACTIVE':
-      return '不活跃'
-    default:
-      return '未知'
-  }
 }
 
 const viewWorkerDetails = (worker: Worker) => {
@@ -310,28 +267,6 @@ th {
   background: #f8f9fa;
   font-weight: 600;
   color: #333;
-}
-
-.status {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.status.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status.inactive {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.status.unknown {
-  background: #e2e3e5;
-  color: #383d41;
 }
 
 .btn-view {

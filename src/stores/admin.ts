@@ -239,10 +239,7 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getAuditLogs(params)
-        if (response.success) {
-          this.auditLogs = response.data
-        }
-        return response
+        this.auditLogs = response
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取审计日志失败'
         throw error
@@ -313,28 +310,6 @@ export const useAdminStore = defineStore('admin', {
       }
     },
 
-    async batchSubmitOrders(data: {
-      batchId?: number
-      processedCount: number
-      orders: Partial<RepairOrder>[]
-    }) {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await adminService.batchSubmitOrders(data)
-        if (response.success) {
-          // 可以选择重新获取订单列表
-          await this.fetchRepairOrders()
-        }
-        return response
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : '批量提交工单失败'
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
     async executeMonthlySettlement(data: Partial<RepairOrder>) {
       this.loading = true
       this.error = null
@@ -349,14 +324,11 @@ export const useAdminStore = defineStore('admin', {
       }
     },
 
-    async rollbackRepairOrder(orderId: number, data: {
-      reason: string
-      rollbackToStatus: string
-    }) {
+    async rollbackRepairOrder(orderId: number, params: { targetTimestamp: string }) {
       this.loading = true
       this.error = null
       try {
-        const response = await adminService.rollbackRepairOrder(orderId, data)
+        const response = await adminService.rollbackRepairOrder(orderId, params)
         if (response.success) {
           // 重新获取订单列表以更新状态
           await this.fetchRepairOrders()

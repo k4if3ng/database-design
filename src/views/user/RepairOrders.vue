@@ -1,6 +1,11 @@
 <template>
   <div class="repair-orders">
     <h1>维修工单</h1>
+    
+    <div class="action-buttons">
+      <button class="batch-submit-button" @click="showBatchSubmitModal = true">批量提交工单</button>
+    </div>
+    
     <div v-if="loading" class="loading">加载中...</div>
     <div v-else-if="repairOrders.length === 0" class="empty-state">
       <p>暂无维修工单。</p>
@@ -71,6 +76,84 @@
         </form>
       </div>
     </div>
+    
+    <!-- 批量提交工单弹窗 -->
+    <div class="modal" v-if="showBatchSubmitModal">
+      <div class="modal-content batch-modal">
+        <div class="modal-header">
+          <h2>批量提交维修工单</h2>
+          <button class="close-button" @click="closeBatchSubmitModal">&times;</button>
+        </div>
+        
+        <div class="batch-orders">
+          <div v-for="(order, index) in batchOrdersForm" :key="index" class="batch-order-item">
+            <h3>工单 #{{ index + 1 }}</h3>
+            
+            <div class="form-group">
+              <label>选择车辆</label>
+              <select v-model="order.vehicleId" class="form-select" required>
+                <option value="" disabled>请选择车辆</option>
+                <option v-for="vehicle in vehicles" :key="vehicle.vehicleId" :value="vehicle.vehicleId">
+                  {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.licensePlate }})
+                </option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>维修类型</label>
+              <select v-model="order.repairType" class="form-select" required>
+                <option value="">请选择维修类型</option>
+                <option value="发动机维修">发动机维修</option>
+                <option value="电气维修">电气维修</option>
+                <option value="钣金喷漆">钣金喷漆</option>
+                <option value="新能源维修">新能源维修</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>问题描述</label>
+              <textarea
+                v-model="order.issue"
+                class="form-textarea"
+                rows="3"
+                placeholder="请描述车辆问题..."
+                required
+              ></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>额外信息</label>
+              <textarea
+                v-model="order.additionalInfo"
+                class="form-textarea"
+                rows="2"
+                placeholder="请提供额外信息（可选）..."
+              ></textarea>
+            </div>
+            
+            <button v-if="batchOrdersForm.length > 1" @click="removeBatchOrder(index)" class="btn-remove">
+              删除此工单
+            </button>
+          </div>
+        </div>
+        
+        <button @click="addBatchOrder" class="add-order-button">
+          + 添加工单
+        </button>
+        
+        <div class="form-actions">
+          <button class="cancel-button" @click="closeBatchSubmitModal">取消</button>
+          <button
+            class="submit-button"
+            @click="submitBatchOrders"
+            :disabled="isSubmittingBatch"
+          >
+            {{ isSubmittingBatch ? '提交中...' : '提交所有工单' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -101,12 +184,35 @@ const formatDate = (dateString: string) => {
   })
 }
 
+interface BatchOrderItem {
+  vehicleId: number | null;
+  issue: string;
+  repairType: string;
+  additionalInfo?: string;
+}
+
+const emptyBatchOrder = (): BatchOrderItem => ({
+  vehicleId: null,
+  issue: '',
+  repairType: '',
+  additionalInfo: ''
+})
+
 export default defineComponent({
   name: 'RepairOrders',
   setup() {
     const userStore = useUserStore()
-    const { repairOrders, loading, fetchRepairOrders, submitFeedback: storeSubmitFeedback } = userStore
+    const { 
+      repairOrders, 
+      vehicles,
+      loading, 
+      fetchRepairOrders, 
+      fetchVehicles,
+      submitFeedback: storeSubmitFeedback,
+      batchSubmitOrders: storeBatchSubmitOrders
+    } = userStore
 
+    // 反馈表单相关
     const showFeedbackModal = ref(false)
     const isSubmitting = ref(false)
     const selectedOrder = ref<any>(null)
@@ -116,6 +222,12 @@ export default defineComponent({
       content: '',
     })
 
+    // 批量提交工单相关
+    const showBatchSubmitModal = ref(false)
+    const isSubmittingBatch = ref(false)
+    const batchOrdersForm = ref<BatchOrderItem[]>([emptyBatchOrder()])
+
+    // 反馈表单方法
     const openFeedbackModal = (order: any) => {
       selectedOrder.value = order
       feedbackForm.repairOrderId = order.orderId
@@ -147,19 +259,90 @@ export default defineComponent({
       }
     }
 
-    onMounted(() => {
+    // 批量提交工单方法
+    const addBatchOrder = () => {
+      batchOrdersForm.value.push(emptyBatchOrder())
+    }
+
+    const removeBatchOrder = (index: number) => {
+      batchOrdersForm.value.splice(index, 1)
+    }
+
+    const closeBatchSubmitModal = () => {
+      showBatchSubmitModal.value = false
+      batchOrdersForm.value = [emptyBatchOrder()]
+    }
+
+    const submitBatchOrders = async () => {
+      // 验证表单
+      for (const [index, order] of batchOrdersForm.value.entries()) {
+        if (!order.vehicleId) {
+          alert(`工单 #${index + 1} 请选择车辆`)
+          return
+        }
+        if (!order.repairType) {
+          alert(`工单 #${index + 1} 请选择维修类型`)
+          return
+        }
+        if (!order.issue.trim()) {
+          alert(`工单 #${index + 1} 请填写问题描述`)
+          return
+        }
+      }
+
+      try {
+        isSubmittingBatch.value = true
+        
+        // 转换为API所需格式
+        const payload = {
+         repairs: batchOrdersForm.value.map(order => ({
+            vehicleId: order.vehicleId as number, // ensure vehicleId is number
+            issue: order.issue,
+            repairType: order.repairType,
+            additionalInfo: order.additionalInfo || undefined
+          }))
+        }
+        
+        await storeBatchSubmitOrders(payload)
+        alert('批量提交工单成功')
+        closeBatchSubmitModal()
+        await fetchRepairOrders() // 刷新工单列表
+      } catch (error) {
+        console.error('批量提交工单失败:', error)
+        alert('批量提交工单失败，请稍后重试')
+      } finally {
+        isSubmittingBatch.value = false
+      }
+    }
+
+    onMounted(async () => {
       fetchRepairOrders()
+      fetchVehicles() // 获取车辆列表用于批量提交
     })
 
     return {
       repairOrders,
+      vehicles,
       loading,
+      
+      // 反馈相关
       showFeedbackModal,
       feedbackForm,
       isSubmitting,
       openFeedbackModal,
       closeFeedbackModal,
       submitFeedback,
+      
+      // 批量提交相关
+      showBatchSubmitModal,
+      batchOrdersForm,
+      isSubmittingBatch,
+      addBatchOrder,
+      removeBatchOrder,
+      closeBatchSubmitModal,
+      submitBatchOrders,
+      
+      // 辅助方法
       formatDate,
       getStatusText,
     }
@@ -234,6 +417,7 @@ export default defineComponent({
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -310,5 +494,95 @@ export default defineComponent({
   text-align: center;
   font-size: 18px;
   padding: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.batch-submit-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.batch-submit-button:hover {
+  background: #388e3c;
+}
+
+.batch-modal {
+  width: 600px;
+  max-width: 90vw;
+}
+
+.batch-orders {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.batch-order-item {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  resize: vertical;
+}
+
+.btn-remove {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+
+.add-order-button {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.add-order-button:hover {
+  background: #0b7dda;
 }
 </style>

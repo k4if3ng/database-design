@@ -491,7 +491,8 @@ const fetchLogs = async () => {
     }
     
     const response = await adminStore.fetchAuditLogs(params)
-    auditLogs.value = response
+    // 如果 fetchAuditLogs 没有返回值，需要从 store 获取
+    auditLogs.value = typeof response !== 'undefined' ? response : adminStore.auditLogs
 
   } catch (err) {
     error.value = '获取日志失败'

@@ -1,6 +1,6 @@
 // src/services/user.ts
 import api from './api'
-import type { Vehicle, RepairOrder, RepairLog, Feedback, ApiResponse } from '@/types'
+import type { Vehicle, RepairOrder, RepairLog, Feedback, ApiResponse, BatchSubmitOrders } from '@/types'
 
 export const userService = {
   // 提交维修申请
@@ -41,5 +41,12 @@ export const userService = {
     category: string
   }): Promise<ApiResponse<Feedback>> {
     return api.post('/v1/feedbacks', data).then((res) => res.data)
+  },
+
+  // 批量提交维修工单
+  async batchSubmitOrders(data: {
+    batchRequest: Partial<RepairOrder>[]
+  }): Promise<ApiResponse<BatchSubmitOrders>> {
+    return api.post('/v1/repairs/batch-submit', data).then((res) => res.data)
   },
 }

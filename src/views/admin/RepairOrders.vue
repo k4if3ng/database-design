@@ -34,29 +34,43 @@
       </div>
     </div>
 
-    <div class="filters">
-      <div class="filter-group">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜索工单..."
-          class="search-input"
-        />
-        <select v-model="statusFilter" class="filter-select">
-          <option value="">所有状态</option>
-          <option value="PENDING">待分配</option>
-          <option value="ASSIGNED">已分配</option>
-          <option value="IN_PROGRESS">进行中</option>
-          <option value="COMPLETED">已完成</option>
-        </select>
-        <select v-model="priorityFilter" class="filter-select">
-          <option value="">所有优先级</option>
-          <option value="HIGH">高</option>
-          <option value="MEDIUM">中</option>
-          <option value="LOW">低</option>
-        </select>
-      </div>
-    </div>
+        <div class="filters">
+          <div class="filter-group">
+            <select v-model="statusFilter" class="filter-select">
+              <option value="">所有状态</option>
+              <option value="PENDING">待分配</option>
+              <option value="ASSIGNED">已分配</option>
+              <option value="IN_PROGRESS">进行中</option>
+              <option value="COMPLETED">已完成</option>
+            </select>
+            <select v-model="priorityFilter" class="filter-select">
+              <option value="">所有优先级</option>
+              <option value="HIGH">高</option>
+              <option value="MEDIUM">中</option>
+              <option value="LOW">低</option>
+            </select>
+            <select v-model="repairTypeFilter" class="filter-select">
+              <option value="">所有工种</option>
+              <option value="发动机维修">发动机维修</option>
+              <option value="电气维修">电气维修</option>
+              <option value="钣金喷漆">钣金喷漆</option>
+              <option value="新能源维修">新能源维修</option>
+              <option value="其他">其他</option>
+            </select>
+            <select v-model="userFilter" class="filter-select">
+              <option value="">所有车辆</option>
+              <option v-for="user in uniqueUsers" :key="user.vehicleId" :value="user.vehicleId">
+                {{ user.licensePlate || user.vehicleId }}
+              </option>
+            </select>            、
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索工单..."
+              class="search-input"
+            />
+          </div>
+        </div>
 
     <div class="orders-table">
       <div v-if="loading" class="loading">加载中...</div>
@@ -389,43 +403,39 @@
 
     <!-- 回滚工单模态框 -->
     <div v-if="showRollbackModal" class="modal-overlay" @click="closeRollbackModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h3>回滚工单 - #{{ selectedOrder?.orderId }}</h3>
-          <button @click="closeRollbackModal" class="close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="submitRollback">
-            <div class="form-group">
-              <label>当前状态:</label>
-              <span :class="['status', selectedOrder?.status.toLowerCase()]">
-                {{ getStatusText(selectedOrder?.status) }}
-              </span>
-            </div>
-            <div class="form-group">
-              <label>回滚到状态:</label>
-              <select v-model="rollbackForm.rollbackToStatus" required class="form-select">
-                <option value="PENDING_ASSIGNMENT">待分配</option>
-                <option value="ASSIGNED" v-if="selectedOrder?.status !== 'ASSIGNED'">已分配</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>回滚原因:</label>
-              <textarea 
-                v-model="rollbackForm.reason" 
-                rows="3"
-                placeholder="请详细说明回滚原因..."
-                required
-                class="form-textarea"
-              ></textarea>
-            </div>
-            <div class="warning-message">
-              <strong>注意:</strong> 回滚操作将撤销工单当前状态，请谨慎操作！
-            </div>
-            <div class="form-actions">
-              <button type="button" @click="closeRollbackModal" class="btn-cancel">取消</button>
-              <button type="submit" class="btn-warning">确认回滚</button>
-            </div>
+    <div class="modal" @click.stop>
+      <div class="modal-header">
+        <h3>回滚工单 - #{{ selectedOrder?.orderId }}</h3>
+        <button @click="closeRollbackModal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form @submit.prevent="submitRollback">
+          <div class="form-group">
+            <label>当前状态:</label>
+            <span :class="['status', selectedOrder?.status.toLowerCase()]">
+              {{ getStatusText(selectedOrder?.status) }}
+            </span>
+          </div>
+          
+          <div class="form-group">
+            <label>回滚时间:</label>
+            <input 
+              type="datetime-local" 
+              v-model="rollbackForm.targetTimestamp" 
+              class="form-input"
+              required
+            />
+            <span class="form-hint">请选择回滚的目标时间点</span>
+          </div>
+          
+          <div class="warning-message">
+            <strong>注意:</strong> 回滚操作将撤销工单在所选时间点之后的所有状态变更，请谨慎操作！
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" @click="closeRollbackModal" class="btn-cancel">取消</button>
+            <button type="submit" class="btn-warning">确认回滚</button>
+          </div>
           </form>
         </div>
       </div>
@@ -437,62 +447,6 @@
         <div class="modal-header">
           <h3>批量提交工单</h3>
           <button @click="closeBatchSubmitModal" class="close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="submitBatchOrders">
-            <div class="batch-orders">
-              <div v-for="(order, index) in batchOrdersForm" :key="index" class="batch-order-item">
-                <h4>工单 {{ index + 1 }}</h4>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>车辆ID:</label>
-                    <input type="number" v-model.number="order.vehicleId" required class="form-input">
-                  </div>
-                  <div class="form-group">
-                    <label>问题描述:</label>
-                    <input type="text" v-model="order.issue" required class="form-input">
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>维修类型:</label>
-                    <select v-model="order.repairType" required class="form-select">
-                      <option value="发动机维修">发动机维修</option>
-                      <option value="电气维修">电气维修</option>
-                      <option value="钣金喷漆">钣金喷漆</option>
-                      <option value="新能源维修">钣新能源维修</option>
-                      <option value="其他">其他</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>优先级:</label>
-                    <select v-model="order.priority" class="form-select">
-                      <option value="LOW">低</option>
-                      <option value="MEDIUM">中</option>
-                      <option value="HIGH">高</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>附加信息:</label>
-                  <textarea v-model="order.additionalInfo" rows="2" class="form-textarea"></textarea>
-                </div>
-                <button 
-                  type="button" 
-                  @click="removeBatchOrder(index)" 
-                  class="btn-remove"
-                  v-if="batchOrdersForm.length > 1"
-                >
-                  删除此工单
-                </button>
-              </div>
-            </div>
-            <button type="button" @click="addBatchOrder" class="btn-add">添加工单</button>
-            <div class="form-actions">
-              <button type="button" @click="closeBatchSubmitModal" class="btn-cancel">取消</button>
-              <button type="submit" class="btn-primary">提交工单</button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -521,6 +475,8 @@ const showBatchSubmitModal = ref(false)
 const selectedOrder = ref<RepairOrder | null>(null)
 const isBatchAssign = ref(false)
 const ordersToAssign = ref<RepairOrder[]>([])
+const repairTypeFilter = ref('') // 新增工种过滤器
+const userFilter = ref('') // 新增用户过滤器
 
 const assignForm = ref({
   workerId: 0,
@@ -530,8 +486,9 @@ const assignForm = ref({
 })
 
 const rollbackForm = ref({
-  reason: '',
-  rollbackToStatus: 'PENDING_ASSIGNMENT'
+  // reason: '',
+  // rollbackToStatus: 'PENDING_ASSIGNMENT',
+  targetTimestamp: ''
 })
 
 const batchOrdersForm = ref([{
@@ -547,6 +504,24 @@ const batchAssignOptions = ref({
   respectSpecialty: true
 })
 
+
+// 获取唯一用户列表（根据车辆ID和车牌号）
+const uniqueUsers = computed(() => {
+  const userMap = new Map();
+  
+  repairOrders.value.forEach(order => {
+    if (order.vehicleId && !userMap.has(order.vehicleId)) {
+      userMap.set(order.vehicleId, {
+        vehicleId: order.vehicleId,
+        licensePlate: order.licensePlate
+      });
+    }
+  });
+  
+  return Array.from(userMap.values());
+});
+
+// 更新筛选逻辑
 const filteredOrders = computed(() => {
   let filtered = repairOrders.value
   
@@ -564,6 +539,16 @@ const filteredOrders = computed(() => {
   
   if (priorityFilter.value) {
     filtered = filtered.filter(order => order.priority === priorityFilter.value)
+  }
+  
+  // 按工种筛选
+  if (repairTypeFilter.value) {
+    filtered = filtered.filter(order => order.repairType === repairTypeFilter.value)
+  }
+  
+  // 按用户（车辆）筛选
+  if (userFilter.value) {
+    filtered = filtered.filter(order => order.vehicleId === parseInt(userFilter.value))
   }
   
   return filtered
@@ -681,6 +666,14 @@ const handleOrderAssignment = (order: RepairOrder) => {
 const handleOrderAssignmentFromDetail = (order: RepairOrder) => {
   closeDetailModal();
   handleOrderAssignment(order);
+}
+
+// 处理从详情页回滚工单
+const rollbackOrderFromDetail = () => {
+  if (selectedOrder.value) {
+    rollbackOrder(selectedOrder.value);
+    closeDetailModal();
+  }
 }
 
 // 获取预估工时
@@ -896,26 +889,27 @@ const submitManualBatch = async () => {
 // 回滚工单
 const rollbackOrder = (order: RepairOrder) => {
   selectedOrder.value = order
+  
+  // 格式化当前日期时间，用于datetime-local输入 (YYYY-MM-DDThh:mm)
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  
   rollbackForm.value = {
-    reason: '',
-    rollbackToStatus: 'PENDING_ASSIGNMENT'
+    targetTimestamp: `${year}-${month}-${day}T${hours}:${minutes}`
   }
+  
   showRollbackModal.value = true
-}
-
-const rollbackOrderFromDetail = () => {
-  if (selectedOrder.value) {
-    closeDetailModal()
-    rollbackOrder(selectedOrder.value)
-  }
 }
 
 const closeRollbackModal = () => {
   showRollbackModal.value = false
   selectedOrder.value = null
   rollbackForm.value = {
-    reason: '',
-    rollbackToStatus: 'PENDING_ASSIGNMENT'
+    targetTimestamp: ''
   }
 }
 
@@ -923,7 +917,15 @@ const submitRollback = async () => {
   if (!selectedOrder.value) return
   
   try {
-    const response = await adminStore.rollbackRepairOrder(selectedOrder.value.orderId, rollbackForm.value)
+    // 将本地日期时间格式转换为ISO字符串
+    const isoTimestamp = new Date(rollbackForm.value.targetTimestamp).toISOString()
+    
+    // 发送请求参数而不是请求体
+    const response = await adminStore.rollbackRepairOrder(
+      selectedOrder.value.orderId, 
+      { targetTimestamp: isoTimestamp }
+    )
+    
     if (response.success) {
       alert('工单回滚成功！')
       closeRollbackModal()
@@ -980,25 +982,6 @@ const addBatchOrder = () => {
 
 const removeBatchOrder = (index: number) => {
   batchOrdersForm.value.splice(index, 1)
-}
-
-const submitBatchOrders = async () => {
-  try {
-    const response = await adminStore.batchSubmitOrders({
-      processedCount: batchOrdersForm.value.length,
-      orders: batchOrdersForm.value
-    })
-    if (response.success) {
-      alert(`成功提交 ${response.data.successfullyCreated} 个工单`)
-      closeBatchSubmitModal()
-      await adminStore.fetchRepairOrders()
-    } else {
-      alert(`提交失败: ${response.message}`)
-    }
-  } catch (error) {
-    console.error('批量提交失败:', error)
-    alert('批量提交失败，请稍后重试')
-  }
 }
 
 onMounted(async () => {

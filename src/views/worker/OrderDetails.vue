@@ -32,10 +32,6 @@
             <span class="value">{{ currentOrder.issue }}</span>
           </div>
           <div class="info-row">
-            <span class="label">维修类型:</span>
-            <span class="value">{{ currentOrder.repairType || '未指定' }}</span>
-          </div>
-          <div class="info-row">
             <span class="label">创建时间:</span>
             <span class="value">{{ formatDate(currentOrder.createTime) }}</span>
           </div>
