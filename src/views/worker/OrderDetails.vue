@@ -14,7 +14,7 @@
         <button @click="goBack" class="back-btn">
           &larr; 返回列表
         </button>
-        <h1>工单 #{{ currentOrder.id }}</h1>
+        <h1>工单 #{{ currentOrder.orderId }}</h1>
         <span :class="`status ${currentOrder.status.toLowerCase()}`">
           {{ getStatusText(currentOrder.status) }}
         </span>
@@ -45,7 +45,7 @@
           </div>
           <div v-if="currentOrder.vehicleInfo" class="info-row">
             <span class="label">车辆型号:</span>
-            <span class="value">{{ currentOrder.vehicleInfo.brand }} {{ currentOrder.vehicleInfo.model }} ({{ currentOrder.vehicleInfo.year }})</span>
+            <span class="value">{{ currentOrder.vehicleInfo.brand }} {{ currentOrder.vehicleInfo.model }}</span>
           </div>
         </div>
         
@@ -176,7 +176,7 @@ const materialForm = ref({
 
 const currentOrder = computed(() => {
   const orderId = Number(route.params.id)
-  return workerStore.assignedOrders.find((order: RepairOrder) => order.id === orderId)
+  return workerStore.assignedOrders.find((order: RepairOrder) => order.orderId === orderId)
 })
 
 const getStatusText = (status: string) => {
@@ -210,7 +210,7 @@ const handleAccept = async () => {
   if (!currentOrder.value) return
   
   try {
-    await workerStore.acceptOrder(currentOrder.value.id)
+    await workerStore.acceptOrder(currentOrder.value.orderId)
     alert('工单已成功接受')
   } catch (error) {
     console.error('接受工单失败:', error)
@@ -232,7 +232,7 @@ const handleReject = async () => {
   }
 
   try {
-    await workerStore.rejectOrder(currentOrder.value.id, rejectReason.value)
+    await workerStore.rejectOrder(currentOrder.value.orderId, rejectReason.value)
     showRejectDialog.value = false
     alert('工单已成功拒绝')
   } catch (error) {
@@ -250,7 +250,7 @@ const handleComplete = async () => {
   }
   
   try {
-    await workerStore.completeOrder(currentOrder.value.id, {
+    await workerStore.completeOrder(currentOrder.value.orderId, {
       laborHours: completeForm.value.laborHours,
       description: completeForm.value.description,
       suggestion: completeForm.value.suggestion
@@ -272,7 +272,7 @@ const handleAddMaterial = async () => {
   }
   
   try {
-    const response = await workerStore.addMaterial(currentOrder.value.id, {
+    const response = await workerStore.addMaterial(currentOrder.value.orderId, {
       name: materialForm.value.name,
       quantity: materialForm.value.quantity,
       unitPrice: materialForm.value.unitPrice,

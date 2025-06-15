@@ -69,13 +69,8 @@ const router = createRouter({
           component: () => import('@/views/worker/OrderDetails.vue'),
         },
         {
-          path: 'repair-logs',
-          name: 'WorkerRepairLogs',
-          component: () => import('@/views/worker/RepairLogs.vue'),
-        },
-        {
-          path: 'WorkerPerformance',
-          name: 'WorkerPerformance',
+          path: 'performance',
+          name: 'Performance',
           component: () => import('@/views/worker/Performance.vue'),
         },
       ],
@@ -91,7 +86,31 @@ const router = createRouter({
           name: 'AdminDashboard',
           component: () => import('@/views/admin/Dashboard.vue'),
         },
-
+        {
+          path: 'users',
+          name: 'Users',
+          component: () => import('@/views/admin/Users.vue'),
+        },
+        {
+          path: 'workers',
+          name: 'Workers',
+          component: () => import('@/views/admin/Workers.vue'),
+        },
+        {
+          path: 'repair-orders',
+          name: 'RepairOrders',
+          component: () => import('@/views/admin/RepairOrders.vue'),
+        },
+        {
+          path: 'statistics',
+          name: 'Statistics',
+          component: () => import('@/views/admin/Statistics.vue'),
+        },
+        {
+          path: 'audit-logs',
+          name: 'AuditLogs',
+          component: () => import('@/views/admin/AuditLogs.vue'),
+        },
       ],
     },
   ],

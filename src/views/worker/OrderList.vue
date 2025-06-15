@@ -28,9 +28,9 @@
       </div>
       
       <div v-else class="orders-grid">
-        <div v-for="order in filteredOrders" :key="order.id" class="order-card">
+        <div v-for="order in filteredOrders" :key="order.orderId" class="order-card">
           <div class="order-header">
-            <h3>工单 #{{ order.id }}</h3>
+            <h3>工单 #{{ order.orderId }}</h3>
             <span :class="`status ${order.status.toLowerCase()}`">
               {{ getStatusText(order.status) }}
             </span>
@@ -43,13 +43,13 @@
           </div>
           
           <div class="order-footer">
-            <router-link :to="`/worker/orders/${order.id}`" class="view-btn">
+            <router-link :to="`/worker/orders/${order.orderId}`" class="view-btn">
               查看详情
             </router-link>
             
             <div class="action-buttons" v-if="order.status === 'ASSIGNED'">
-              <button @click="handleAccept(order.id)" class="accept-btn">接受</button>
-              <button @click="openRejectDialog(order.id)" class="reject-btn">拒绝</button>
+              <button @click="handleAccept(order.orderId)" class="accept-btn">接受</button>
+              <button @click="openRejectDialog(order.orderId)" class="reject-btn">拒绝</button>
             </div>
           </div>
         </div>

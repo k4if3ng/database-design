@@ -7,9 +7,9 @@
     </div>
     <div v-else>
       <div class="orders-grid">
-        <div v-for="order in repairOrders" :key="order.id" class="order-card">
+        <div v-for="order in repairOrders" :key="order.orderId" class="order-card">
           <div class="order-header">
-            <h2>工单 #{{ order.id }}</h2>
+            <h2>工单 #{{ order.orderId }}</h2>
             <span class="status">{{ getStatusText(order.status) }}</span>
           </div>
           <div class="order-details">

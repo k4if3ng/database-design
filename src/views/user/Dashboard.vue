@@ -27,7 +27,7 @@
     <div class="recent-orders">
       <h2>最近的维修工单</h2>
       <div class="order-list">
-        <div v-for="order in recentOrders" :key="order.id" class="order-item">
+        <div v-for="order in recentOrders" :key="order.orderId" class="order-item">
           <div class="order-info">
             <h4>{{ order.issue }}</h4>
             <p>车牌号: {{ order.licensePlate }}</p>

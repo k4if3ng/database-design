@@ -7,9 +7,9 @@
     </div>
     <div v-else>
       <div class="logs-grid">
-        <div v-for="log in repairLogs" :key="log.id" class="log-card">
+        <div v-for="log in repairLogs" :key="log.logId" class="log-card">
           <div class="log-header">
-            <h2>记录 #{{ log.id }}</h2>
+            <h2>记录 #{{ log.logId }}</h2>
             <!-- <span class="rating">评分: {{ log.rating }}</span> -->
           </div>
           <div class="log-details">

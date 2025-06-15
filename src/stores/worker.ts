@@ -1,14 +1,42 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { workerService } from '@/services/worker'
-import type { Earning, RepairLog, RepairOrder, WorkerPerformance } from '@/types'
+import type { WorkerEarning, RepairLog, RepairOrder, WorkerPerformance, MonthlySettlement } from '@/types'
 
 export const useWorkerStore = defineStore('worker', () => {
   const assignedOrders = ref<RepairOrder[]>([])
-  const repairLogs = ref<RepairLog[]>([])
-  const earnings = ref<Earning | null>(null)
+  const repairOrders = ref<RepairOrder[]>([])
+  const earnings = ref<number | null>(null)
+  const earningDetails = ref<WorkerEarning | null>(null)
   const workerPerformance = ref<WorkerPerformance | null>(null)
+  const settlementRecords = ref<MonthlySettlement[]>([])
   const loading = ref(false)
+
+  // 计算属性：格式化收入数据用于 Performance 页面
+  const performanceEarnings = computed(() => {
+    if (!earnings.value || !workerPerformance.value) return null
+    
+    return {
+      totalEarnings: workerPerformance.value.totalEarnings,
+      thisMonthEarnings: getCurrentMonthEarnings(),
+      completedOrders: workerPerformance.value.completedOrders,
+      averageOrderValue: workerPerformance.value.completedOrders > 0 
+        ? workerPerformance.value.totalEarnings / workerPerformance.value.completedOrders 
+        : 0
+    }
+  })
+
+  const getCurrentMonthEarnings = (): number => {
+    const currentDate = new Date()
+    const currentMonth = currentDate.getMonth() + 1
+    const currentYear = currentDate.getFullYear()
+    
+    const monthlyRecord = settlementRecords.value.find(record => 
+      record.settlementMonth === currentMonth && record.settlementYear === currentYear
+    )
+    
+    return monthlyRecord?.totalSalary || 0
+  }
 
   const fetchAssignedOrders = async () => {
     try {
@@ -23,13 +51,13 @@ export const useWorkerStore = defineStore('worker', () => {
     }
   }
 
-  const fetchRepairLogs = async () => {
+  const fetchRepairOrders = async () => {
     try {
       loading.value = true
-      const response = await workerService.getRepairLogs()
-      repairLogs.value = response.data
+      const response = await workerService.getRepairOrders()
+      repairOrders.value = response.data
     } catch (error) {
-      console.error('Failed to fetch repair logs:', error)
+      console.error('Failed to fetch repair orders:', error)
       throw error
     } finally {
       loading.value = false
@@ -41,7 +69,7 @@ export const useWorkerStore = defineStore('worker', () => {
     try {
       const response = await workerService.acceptOrder(orderId)
       
-      const index = assignedOrders.value.findIndex(order => order.id === orderId)
+      const index = assignedOrders.value.findIndex(order => order.orderId === orderId)
       if (index !== -1) {
         assignedOrders.value[index].status = 'ACCEPTED'
       }
@@ -66,7 +94,7 @@ export const useWorkerStore = defineStore('worker', () => {
     try {
       const response = await workerService.rejectOrder(orderId, { reason })
       
-      const index = assignedOrders.value.findIndex(order => order.id === orderId)
+      const index = assignedOrders.value.findIndex(order => order.orderId === orderId)
       if (index !== -1) {
         assignedOrders.value[index].status = 'REJECTED'
       }
@@ -91,7 +119,7 @@ export const useWorkerStore = defineStore('worker', () => {
     try {
       const response = await workerService.completeOrder(orderId, data)
       
-      const index = assignedOrders.value.findIndex(order => order.id === orderId)
+      const index = assignedOrders.value.findIndex(order => order.orderId === orderId)
       if (index !== -1) {
         assignedOrders.value[index].status = 'COMPLETED'
       }
@@ -132,29 +160,54 @@ export const useWorkerStore = defineStore('worker', () => {
     }
   }
 
+  const fetchEarningDetails = async () => {
+    try {
+      const response = await workerService.getEarningDetails()
+      earningDetails.value = response.data
+    } catch (error) {
+      console.error('Failed to fetch earning details:', error)
+      throw error
+    }
+  }
+
   const fetchWorkerPerformance = async () => {
     try {
       const response = await workerService.getWorkerPerformance()
-      workerPerformance.value = response.data as unknown as WorkerPerformance
+      workerPerformance.value = response.data
     } catch (error) {
-      console.error('Failed to fetch WorkerPerformance:', error)
+      console.error('Failed to fetch worker performance:', error)
+      throw error
+    }
+  }
+
+  const fetchSettlementRecords = async () => {
+    try {
+      const response = await workerService.getSettlementRecords()
+      settlementRecords.value = response.data
+    } catch (error) {
+      console.error('Failed to fetch settlement records:', error)
       throw error
     }
   }
 
   return {
     assignedOrders,
-    repairLogs,
+    repairOrders,
     earnings,
+    earningDetails,
     workerPerformance,
+    settlementRecords,
+    performanceEarnings,
     loading,
     fetchAssignedOrders,
-    fetchRepairLogs,
+    fetchRepairOrders,
     acceptOrder,
     rejectOrder,
     completeOrder,
     addMaterial,
     fetchEarnings,
-    fetchWorkerPerformance
+    fetchEarningDetails,
+    fetchWorkerPerformance,
+    fetchSettlementRecords
   }
 })

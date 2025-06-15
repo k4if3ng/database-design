@@ -13,13 +13,13 @@ export interface ErrorResponse {
 }
 
 export interface User {
-  id: number
+  userId: number
   username: string
   phone: string
 }
 
 export interface Worker {
-  id: number
+  workerId: number
   workerName: string
   specialty: string
   hourlyWage: number
@@ -41,7 +41,7 @@ export interface Vehicle {
 }
 
 export interface RepairOrder {
-  id: number
+  orderId: number
   issue: string
   status: string
   vehicleId: number
@@ -70,7 +70,7 @@ export interface RepairOrder {
 }
 
 export interface RepairLog {
-  id: number
+  logId: number
   orderId: number
   vehicleId: number
   licensePlate: string
@@ -149,13 +149,34 @@ export interface ProcessOrderRes {
   totalCost?: number
 }
 
-export interface Earning {
-  totalEarnings: number
-  thisMonthEarnings: number
-  completedOrders: number
-  averageOrderValue: number
+export interface MonthlyEarning {
+  month: number;
+  year: number;
+  totalSalary: number;
+  baseSalary: number;
+  hourlyCompensation: number;
+  totalWorkHours: number;
+  settlementStatus: string;
 }
 
+export interface YearlyEarning {
+  year: number;
+  totalSalary: number;
+  baseSalary: number;
+  hourlyCompensation: number;
+  totalWorkHours: number;
+  monthlyEarnings: MonthlyEarning[];
+}
+
+export interface WorkerEarning {
+  workerId: number;
+  workerName: string;
+  specialty: string;
+  hourlyWage: number;
+  baseSalary: number;
+  totalEarnings: number;
+  yearlyEarnings: YearlyEarning[];
+}
 export interface WorkerPerformance {
   workerId: number
   workerName: string
@@ -179,21 +200,47 @@ export interface BatchSubmitOrders {
 }
 
 export interface MonthlySettlement {
+  id: number;
   workerId: number;
   workerName: string;
-  settlementMonth: string;
+  specialty: string;
+  totalHours: number;
+  hourlyWage: number;
+  totalHourlyWage: number;
   baseSalary: number;
-  bonus: number;
-  totalEarnings: number;
-  settlementDate: string;
+  totalSalary: number;
+  settlementYear: number;
+  settlementMonth: number;
+  settlementData: string;
+  settlementStatus: string;
 }
 
-export interface VehicleRepairStats {
-  brand: string;
-  model: string;
-  repairCount: number;
-  averageCost: number;
-  commonIssues: string[];
+export interface Settlement {
+  monthlySettlements: MonthlySettlement[];
+}
+
+export interface VehicleTypeStats {
+  summary: {
+    totalRepairs: number
+    totalVehicleTypes: number
+    dateRange: string
+  }
+  vehicleTypeStats: {
+    vehicleType: string
+    repairCount: number
+    percentage: number
+    averageCost: number
+    repairFrequency: string
+    trend: {
+      month: string
+      count: number
+    }[]
+    commonIssues: {
+      issueType: string
+      count: number
+      percentage: number
+    }[]
+  }[]
 }
 
 export interface CostAnalysis {

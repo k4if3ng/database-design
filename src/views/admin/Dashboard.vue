@@ -163,7 +163,7 @@ onMounted(async () => {
     workers.value = adminStore.workers
     
     // 获取最近的审计日志
-    const logsResponse = await adminStore.getAuditLogs({ page: 1, size: 10 })
+    const logsResponse = await adminStore.fetchAuditLogs({ page: 1, size: 10 })
     if (logsResponse.success && logsResponse.data && logsResponse.data.content) {
       recentLogs.value = logsResponse.data.content
     }
@@ -183,7 +183,6 @@ onMounted(async () => {
 .dashboard {
   min-height: 100vh;
   width: 80vw;
-  padding: 1.5rem;
   background: linear-gradient(to bottom right, #f5f7fa, #c3cfe2);
   box-sizing: border-box;
 }

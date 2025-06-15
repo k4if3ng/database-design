@@ -7,7 +7,7 @@ import type {
   ApiResponse,
   BatchSubmitOrders,
   MonthlySettlement,
-  VehicleRepairStats,
+  VehicleTypeStats,
   CostAnalysis,
   NegativeFeedback,
   SpecialtyWorkload,
@@ -74,8 +74,8 @@ export const adminService = {
   },
 
   // 获取车型维修统计
-  async getVehicleRepairStats(): Promise<ApiResponse<VehicleRepairStats[]>> {
-    return api.get('/statistics/vehicle-repair-stats').then((res) => res.data)
+  async getVehicleRepairStats(): Promise<VehicleTypeStats> {
+    return api.get('/statistics/vehicle-types').then((res) => res.data)
   },
 
   // 获取维修费用构成分析
@@ -106,7 +106,7 @@ export const adminService = {
 
   // 获取未完成任务统计
   async getPendingTasks(): Promise<ApiResponse<PendingTasks>> {
-    return api.get('/statistics/pending-tasks').then((res) => res.data)
+    return api.get('/statistics/pending-orders').then((res) => res.data)
   },
 
   // 数据回滚

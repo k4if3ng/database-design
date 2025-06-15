@@ -10,7 +10,9 @@
           <img :src="user?.avatar || '/images/default-avatar.png'" alt="头像">
         </div> -->
         <div class="user-details">
-          <h3>{{ user?.username }}</h3>
+          <h3>ID: {{ user?.userId }}</h3>
+          <h3>用户名: {{ user?.username }}</h3>
+          <h3>手机号: {{ user?.phone }}</h3>
           <button @click="showProfileModal = true" class="edit-profile-btn">
             <i class="fa-solid fa-user-pen"></i> 编辑资料
           </button>

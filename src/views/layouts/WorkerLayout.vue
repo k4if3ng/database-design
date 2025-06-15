@@ -10,10 +10,9 @@
           <img :src="worker?.avatar || '/images/default-avatar.png'" alt="头像">
         </div> -->
         <div class="user-details">
-          <h3>{{ worker?.workerName }}</h3>
+          <h3>ID: {{ worker?.workerId}}</h3>
+          <h3>用户名: {{ worker?.workerName }}</h3>
           <h3>{{ worker?.specialty }}</h3>
-          <h3>基本工资： {{ worker?.baseSalary }}</h3>
-          <h3>时薪： {{ worker?.hourlyWage }}</h3>
           <!-- <button @click="showProfileModal = true" class="edit-profile-btn">
             <i class="fa-solid fa-user-pen"></i> 编辑资料
           </button> -->
@@ -34,11 +33,6 @@
         <li>
           <router-link to="/worker/orders/:id" class="nav-link">
             <span>工单详情</span>
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/worker/repair-logs" class="nav-link">
-            <span>维修记录</span>
           </router-link>
         </li>
         <li>

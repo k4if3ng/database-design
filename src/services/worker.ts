@@ -1,5 +1,5 @@
 import api from './api'
-import type { RepairOrder, Material, ApiResponse, ProcessOrderRes, Earning, WorkerPerformance, RepairLog } from '@/types'
+import type { RepairOrder, Material, ApiResponse, ProcessOrderRes, WorkerEarning, MonthlySettlement, WorkerPerformance, RepairLog } from '@/types'
 
 export const workerService = {
   // 获取分配的工单
@@ -24,7 +24,7 @@ export const workerService = {
       description: string
       suggestion: string
   }): Promise<ApiResponse<ProcessOrderRes>> {
-    return api.put(`/v1/repair-orders/${orderId}/completion`, data).then((res) => res.data)
+    return api.put(`/v1/repair-orders/${orderId}/complete`, data).then((res) => res.data)
   },
 
   // 添加维修材料
@@ -39,17 +39,27 @@ export const workerService = {
   },
 
   // 查询工资收入
-  async getEarnings(): Promise<ApiResponse<Earning>> {
+  async getEarnings(): Promise<ApiResponse<number>> {
     return api.get('/v1/earnings').then((res) => res.data)
   },
 
   // 查询绩效
-  async getWorkerPerformance(): Promise<ApiResponse<Performance>> {
+  async getWorkerPerformance(): Promise<ApiResponse<WorkerPerformance>> {
     return api.get('/v1/performance').then((res) => res.data)
   },
 
-  // 获取维修记录
-  async getRepairLogs(): Promise<ApiResponse<RepairLog[]>> {
-    return api.get('/v1/workers/repair-logs').then((res) => res.data)
+  // 结算记录
+  async getSettlementRecords(): Promise<ApiResponse<MonthlySettlement[]>> {
+    return api.get('/worker/my-settlements').then((res) => res.data)
   },
+
+  // 获取维修记录
+  async getRepairOrders(): Promise<ApiResponse<RepairOrder[]>> {
+    return api.get('/v1/workers/repair-orders').then((res) => res.data)
+  },
+
+  // 详细收入信息
+  async getEarningDetails(): Promise<ApiResponse<WorkerEarning>> {
+    return api.get('/v1/query/detailed-earnings').then((res) => res.data)
+  }
 }

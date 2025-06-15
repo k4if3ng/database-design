@@ -30,13 +30,12 @@
             <th>用户ID</th>
             <th>用户名</th>
             <th>手机号</th>
-            <th>注册时间</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in filteredUsers" :key="user.id">
-            <td>{{ user.id }}</td>
+          <tr v-for="user in filteredUsers" :key="user.userId">
+            <td>{{ user.userId }}</td>
             <td>{{ user.username }}</td>
             <td>{{ user.phone }}</td>
             <td>
@@ -56,7 +55,7 @@
         </div>
         <div class="modal-body">
           <div class="user-details">
-            <p><strong>用户ID:</strong> {{ selectedUser?.id }}</p>
+            <p><strong>用户ID:</strong> {{ selectedUser?.userId }}</p>
             <p><strong>用户名:</strong> {{ selectedUser?.username }}</p>
             <p><strong>手机号:</strong> {{ selectedUser?.phone }}</p>
           </div>
@@ -110,9 +109,9 @@ onMounted(() => {
 
 <style scoped>
 .users-page {
-  padding: 1.5rem;
   background: #f8f9fa;
   min-height: 100vh;
+  width: 80vw;
 }
 
 .page-header {

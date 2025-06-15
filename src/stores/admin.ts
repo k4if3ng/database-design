@@ -7,7 +7,7 @@ import type {
   RepairOrder,
   BatchSubmitOrders,
   MonthlySettlement,
-  VehicleRepairStats,
+  VehicleTypeStats,
   CostAnalysis,
   NegativeFeedback,
   SpecialtyWorkload,
@@ -30,43 +30,102 @@ export const useAdminStore = defineStore('admin', {
     statisticsOverview: null as AdminStatisticsOverview | null,
     systemHealth: null as SystemHealth | null,
     systemStatus: null as SystemStatus | null,
+    loading: false,
+    error: null as string | null,
   }),
 
   actions: {
     async fetchUsers() {
-      const response = await adminService.getAllUsers()
-      this.users = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAllUsers()
+        this.users = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取用户列表失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchWorkers() {
-      const response = await adminService.getAllWorkers()
-      this.workers = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAllWorkers()
+        this.workers = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取工人列表失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchRepairLogs() {
-      const response = await adminService.getAllRepairLogs()
-      this.repairLogs = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAllRepairLogs()
+        this.repairLogs = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取维修日志失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchRepairOrders() {
-      const response = await adminService.getAllRepairOrders()
-      this.repairOrders = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAllRepairOrders()
+        this.repairOrders = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取维修订单失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchStatisticsOverview() {
-      const response = await adminService.getAdminStatisticsOverview()
-      this.statisticsOverview = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAdminStatisticsOverview()
+        this.statisticsOverview = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取统计概览失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchSystemHealth() {
-      const response = await adminService.getSystemHealth()
-      this.systemHealth = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getSystemHealth()
+        this.systemHealth = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取系统健康状态失败'
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchSystemStatus() {
-      const response = await adminService.getSystemStatus()
-      this.systemStatus = response.data
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getSystemStatus()
+        this.systemStatus = response.data
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取系统状态失败'
+      } finally {
+        this.loading = false
+      }
     },
+
 
     async assignRepairOrder(orderId: number, data: {
       workerId: number
@@ -96,11 +155,11 @@ export const useAdminStore = defineStore('admin', {
       return await adminService.executeMonthlySettlement(data)
     },
 
-    async getVehicleRepairStats() {
+    async fetchVehicleRepairStats() {
       return await adminService.getVehicleRepairStats()
     },
 
-    async getCostAnalysis(params: {
+    async fetchCostAnalysis(params: {
       period: string
       year: number
       month?: number
@@ -108,7 +167,7 @@ export const useAdminStore = defineStore('admin', {
       return await adminService.getCostAnalysis(params)
     },
 
-    async getNegativeFeedback(params?: {
+    async fetchNegativeFeedback(params?: {
       rating?: number
       startDate?: string
       endDate?: string
@@ -116,14 +175,14 @@ export const useAdminStore = defineStore('admin', {
       return await adminService.getNegativeFeedback(params)
     },
 
-    async getSpecialtyWorkload(params?: {
+    async fetchSpecialtyWorkload(params?: {
       startDate?: string
       endDate?: string
     }) {
       return await adminService.getSpecialtyWorkload(params)
     },
 
-    async getPendingTasks() {
+    async fetchPendingTasks() {
       return await adminService.getPendingTasks()
     },
 
@@ -138,7 +197,7 @@ export const useAdminStore = defineStore('admin', {
       return await adminService.batchDeleteOrders(data)
     },
 
-    async getAuditLogs(params?: {
+    async fetchAuditLogs(params?: {
       action?: string
       entityType?: string
       startDate?: string
@@ -149,7 +208,7 @@ export const useAdminStore = defineStore('admin', {
       return await adminService.getAuditLogs(params)
     },
 
-    async getBlockchainProof(orderId: number) {
+    async fetchBlockchainProof(orderId: number) {
       return await adminService.getBlockchainProof(orderId)
     },
   },
