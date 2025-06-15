@@ -18,10 +18,6 @@
         <p class="stat-number">￥{{ totalEarnings.toFixed(2) }}</p>
       </div>
 
-      <div class="stat-card">
-        <h3>平均评分</h3>
-        <p class="stat-number">{{ averageRating.toFixed(1) }}</p>
-      </div>
     </div>
 
     <div class="recent-orders">
@@ -56,7 +52,6 @@ interface Order {
   status: string
   createTime: string
   laborCost?: number
-  rating?: number
 }
 
 const assignedOrders = ref<Order[]>([])
@@ -67,13 +62,6 @@ const completedOrders = computed(() =>
 const totalEarnings = computed(() =>
   assignedOrders.value.reduce((acc, order) => acc + (order.laborCost || 0), 0),
 )
-
-const averageRating = computed(() => {
-  const completed = completedOrders.value
-  if (completed.length === 0) return 0
-  const sum = completed.reduce((acc, order) => acc + (order.rating || 0), 0)
-  return sum / completed.length
-})
 
 const recentOrders = computed(() =>
   assignedOrders.value

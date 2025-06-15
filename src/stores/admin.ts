@@ -19,6 +19,7 @@ import type {
   BlockchainProof,
   SystemHealth,
   SystemStatus,
+  ApiResponse
 } from '@/types'
 
 export const useAdminStore = defineStore('admin', {
@@ -28,6 +29,12 @@ export const useAdminStore = defineStore('admin', {
     repairLogs: [] as RepairLog[],
     repairOrders: [] as RepairOrder[],
     statisticsOverview: null as AdminStatisticsOverview | null,
+    vehicleTypeStats: null as VehicleTypeStats | null,
+    costAnalysis: null as CostAnalysis | null,
+    negativeFeedback: null as NegativeFeedback | null,
+    specialtyWorkload: [] as SpecialtyWorkload[],
+    pendingTasks: null as PendingTasks | null,
+    auditLogs: null as AuditLog | null,
     systemHealth: null as SystemHealth | null,
     systemStatus: null as SystemStatus | null,
     loading: false,
@@ -40,9 +47,14 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getAllUsers()
-        this.users = response.data
+        if (response.success) {
+          this.users = response.data
+        } else {
+          throw new Error(response.message || '获取用户列表失败')
+        }
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取用户列表失败'
+        throw error
       } finally {
         this.loading = false
       }
@@ -53,22 +65,14 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getAllWorkers()
-        this.workers = response.data
+        if (response.success) {
+          this.workers = response.data
+        } else {
+          throw new Error(response.message || '获取工人列表失败')
+        }
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取工人列表失败'
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fetchRepairLogs() {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await adminService.getAllRepairLogs()
-        this.repairLogs = response.data
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : '获取维修日志失败'
+        throw error
       } finally {
         this.loading = false
       }
@@ -79,9 +83,32 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getAllRepairOrders()
-        this.repairOrders = response.data
+        if (response.success) {
+          this.repairOrders = response.data
+        } else {
+          throw new Error(response.message || '获取维修订单失败')
+        }
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取维修订单失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchRepairLogs() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAllRepairLogs()
+        if (response.success) {
+          this.repairLogs = response.data
+        } else {
+          throw new Error(response.message || '获取维修日志失败')
+        } 
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取维修日志失败'
+        throw error
       } finally {
         this.loading = false
       }
@@ -92,71 +119,33 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getAdminStatisticsOverview()
-        this.statisticsOverview = response.data
+        if (response.success) {
+          this.statisticsOverview = response.data
+        } else {
+          throw new Error(response.message || '获取统计概览失败')
+        }
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取统计概览失败'
+        throw error
       } finally {
         this.loading = false
       }
-    },
-
-    async fetchSystemHealth() {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await adminService.getSystemHealth()
-        this.systemHealth = response.data
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : '获取系统健康状态失败'
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fetchSystemStatus() {
-      this.loading = true
-      this.error = null
-      try {
-        const response = await adminService.getSystemStatus()
-        this.systemStatus = response.data
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : '获取系统状态失败'
-      } finally {
-        this.loading = false
-      }
-    },
-
-
-    async assignRepairOrder(orderId: number, data: {
-      workerId: number
-      priority: string
-      estimatedHours: number
-      notes: string
-    }) {
-      return await adminService.assignRepairOrder(orderId, data)
-    },
-
-    async batchSubmitOrders(data: {
-      orders: {
-        vehicleId: number
-        issue: string
-        repairType: string
-        additionalInfo?: string
-        priority?: string
-      }[]
-    }) {
-      return await adminService.batchSubmitOrders(data)
-    },
-
-    async executeMonthlySettlement(data: {
-      year: number
-      month: number
-    }) {
-      return await adminService.executeMonthlySettlement(data)
     },
 
     async fetchVehicleRepairStats() {
-      return await adminService.getVehicleRepairStats()
+      this.loading = true
+      this.error = null
+      try {
+        // 注意：这个方法返回的是VehicleTypeStats而不是ApiResponse
+        const response = await adminService.getVehicleRepairStats()
+        this.vehicleTypeStats = response
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取车型维修统计失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchCostAnalysis(params: {
@@ -164,7 +153,20 @@ export const useAdminStore = defineStore('admin', {
       year: number
       month?: number
     }) {
-      return await adminService.getCostAnalysis(params)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getCostAnalysis(params)
+        if (response.success) {
+          this.costAnalysis = response.data
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取成本分析失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchNegativeFeedback(params?: {
@@ -172,29 +174,57 @@ export const useAdminStore = defineStore('admin', {
       startDate?: string
       endDate?: string
     }) {
-      return await adminService.getNegativeFeedback(params)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getNegativeFeedback(params)
+        if (response.success) {
+          this.negativeFeedback = response.data
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取负面反馈统计失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchSpecialtyWorkload(params?: {
       startDate?: string
       endDate?: string
     }) {
-      return await adminService.getSpecialtyWorkload(params)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getSpecialtyWorkload(params)
+        if (response.success) {
+          this.specialtyWorkload = response.data
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取工种工作量统计失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchPendingTasks() {
-      return await adminService.getPendingTasks()
-    },
-
-    async rollbackRepairOrder(orderId: number, data: {
-      reason: string
-      rollbackToStatus: string
-    }) {
-      return await adminService.rollbackRepairOrder(orderId, data)
-    },
-
-    async batchDeleteOrders(data: number[]) {
-      return await adminService.batchDeleteOrders(data)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getPendingTasks()
+        if (response.success) {
+          this.pendingTasks = response.data
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取待处理任务统计失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchAuditLogs(params?: {
@@ -205,11 +235,224 @@ export const useAdminStore = defineStore('admin', {
       page?: number
       size?: number
     }) {
-      return await adminService.getAuditLogs(params)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getAuditLogs(params)
+        if (response.success) {
+          this.auditLogs = response.data
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取审计日志失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchSystemHealth() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getSystemHealth()
+        if (response.success) {
+          this.systemHealth = response.data
+        } else {
+          throw new Error(response.message || '获取系统健康状态失败')
+        }
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取系统健康状态失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async fetchSystemStatus() {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getSystemStatus()
+        if (response.success) {
+          this.systemStatus = response.data
+        } else {
+          throw new Error(response.message || '获取系统状态失败')
+        }
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取系统状态失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async assignRepairOrder(orderId: number, data: {
+      workerId: number
+      priority: string
+      estimatedHours: number
+      notes: string
+    }) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.assignRepairOrder(orderId, data)
+        if (response.success) {
+          // 更新本地数据
+          const orderIndex = this.repairOrders.findIndex(order => order.orderId === orderId)
+          if (orderIndex !== -1) {
+            this.repairOrders[orderIndex] = response.data
+          }
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '分配工单失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async batchSubmitOrders(data: {
+      batchId?: number
+      processedCount: number
+      orders: Partial<RepairOrder>[]
+    }) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.batchSubmitOrders(data)
+        if (response.success) {
+          // 可以选择重新获取订单列表
+          await this.fetchRepairOrders()
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '批量提交工单失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async executeMonthlySettlement(data: Partial<RepairOrder>) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.executeMonthlySettlement(data)
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '执行月度结算失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async rollbackRepairOrder(orderId: number, data: {
+      reason: string
+      rollbackToStatus: string
+    }) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.rollbackRepairOrder(orderId, data)
+        if (response.success) {
+          // 重新获取订单列表以更新状态
+          await this.fetchRepairOrders()
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '数据回滚失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async batchDeleteOrders(orderIds: number[]) {
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.batchDeleteOrders(orderIds)
+        if (response.success) {
+          // 从本地数据中移除已删除的订单
+          this.repairOrders = this.repairOrders.filter(
+            order => !orderIds.includes(order.orderId)
+          )
+        }
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '批量删除工单失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchBlockchainProof(orderId: number) {
-      return await adminService.getBlockchainProof(orderId)
+      this.loading = true
+      this.error = null
+      try {
+        const response = await adminService.getBlockchainProof(orderId)
+        return response
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : '获取区块链证明失败'
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
+
+    // 清除错误状态
+    clearError() {
+      this.error = null
+    },
+
+    // 重置store状态
+    reset() {
+      this.users = []
+      this.workers = []
+      this.repairLogs = []
+      this.repairOrders = []
+      this.statisticsOverview = null
+      this.vehicleTypeStats = null
+      this.costAnalysis = null
+      this.negativeFeedback = null
+      this.specialtyWorkload = []
+      this.pendingTasks = null
+      this.auditLogs = null
+      this.systemHealth = null
+      this.systemStatus = null
+      this.loading = false
+      this.error = null
+    }
   },
+
+  getters: {
+    // 获取活跃维修工数量
+    activeWorkersCount: (state) => {
+      return state.workers.filter(worker => worker.status === 'ACTIVE').length
+    },
+
+    // 获取待分配订单数量
+    pendingOrdersCount: (state) => {
+      return state.repairOrders.filter(order => order.status === 'PENDING').length
+    },
+
+    // 获取进行中订单数量
+    inProgressOrdersCount: (state) => {
+      return state.repairOrders.filter(order => order.status === 'IN_PROGRESS').length
+    },
+
+    // 获取已完成订单数量
+    completedOrdersCount: (state) => {
+      return state.repairOrders.filter(order => order.status === 'COMPLETED').length
+    },
+
+    // 检查系统是否健康
+    isSystemHealthy: (state) => {
+      return state.systemHealth?.status === 'UP'
+    }
+  }
 })

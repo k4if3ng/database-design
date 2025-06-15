@@ -42,14 +42,14 @@ export const useUserStore = defineStore('user', () => {
   }) => {
     try {
       const payload = {
-        OrderId: feedbackData.repairOrderId,
+        repairOrderId: feedbackData.repairOrderId,
         rating: feedbackData.rating,
         content: feedbackData.content,
         category: feedbackData.category,
       }
       const response = await userService.submitFeedback(payload)
       const feedback = response.data
-      const index = repairOrders.value.findIndex(order => order.id === feedbackData.repairOrderId)
+      const index = repairOrders.value.findIndex(order => order.orderId === feedbackData.repairOrderId)
       if (index !== -1) {
         repairOrders.value[index] = {
           ...repairOrders.value[index],

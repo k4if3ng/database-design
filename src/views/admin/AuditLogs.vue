@@ -490,12 +490,9 @@ const fetchLogs = async () => {
       ...filters.value
     }
     
-    const response = await adminStore.getAuditLogs(params)
-    if (response.success) {
-      auditLogs.value = response.data
-    } else {
-      error.value = response.message || '获取日志失败'
-    }
+    const response = await adminStore.fetchAuditLogs(params)
+    auditLogs.value = response
+
   } catch (err) {
     error.value = '获取日志失败'
     console.error('获取审计日志失败:', err)
@@ -564,7 +561,7 @@ const getBlockchainProof = async (log: any) => {
     loadingBlockchain.value = true
     showBlockchainModal.value = true
     
-    const response = await adminStore.getBlockchainProof(log.entityId)
+    const response = await adminStore.fetchBlockchainProof(log.entityId)
     if (response.success) {
       blockchainProof.value = response.data
     } else {

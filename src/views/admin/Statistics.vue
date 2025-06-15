@@ -29,14 +29,14 @@
           </div>
           <div class="card-icon">📋</div>
         </div>
-        <div class="overview-card rating">
+        <!-- <div class="overview-card rating">
           <div class="card-content">
             <h3>客户满意度</h3>
             <p class="amount">{{ (statisticsOverview?.averageCustomerRating || 0).toFixed(1) }}</p>
             <small>平均评分</small>
           </div>
           <div class="card-icon">⭐</div>
-        </div>
+        </div> -->
         <div class="overview-card profit">
           <div class="card-content">
             <h3>净收益</h3>

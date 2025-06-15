@@ -35,7 +35,7 @@ export const userService = {
 
   // 提交反馈
   async submitFeedback(data: {
-    OrderId: number
+    repairOrderId: number
     rating: number
     content: string
     category: string

@@ -48,86 +48,61 @@
             <span class="value">{{ currentOrder.vehicleInfo.brand }} {{ currentOrder.vehicleInfo.model }}</span>
           </div>
         </div>
-        
-        <!-- 工单操作区域 -->
-        <div class="action-card">
-          <div v-if="currentOrder.status === 'ASSIGNED'" class="action-section">
-            <h3>工单操作</h3>
-            <div class="action-buttons">
-              <button @click="handleAccept" class="primary-btn">接受工单</button>
-              <button @click="openRejectDialog" class="danger-btn">拒绝工单</button>
-            </div>
-          </div>
-          
-          <div v-if="currentOrder.status === 'ACCEPTED' || currentOrder.status === 'IN_PROGRESS'" class="action-section">
-            <h3>完成工单</h3>
-            <div class="form-group">
-              <label>工时 (小时)</label>
-              <input type="number" v-model="completeForm.laborHours" min="0.5" step="0.5" />
-            </div>
-            <div class="form-group">
-              <label>维修描述</label>
-              <textarea v-model="completeForm.description" rows="4" placeholder="详细描述维修过程和解决方案"></textarea>
-            </div>
-            <div class="form-group">
-              <label>维修建议</label>
-              <textarea v-model="completeForm.suggestion" rows="2" placeholder="给客户的后续维护建议"></textarea>
-            </div>
-            <button @click="handleComplete" class="primary-btn">提交完成</button>
-          </div>
-          
-          <div v-if="currentOrder.status === 'ACCEPTED' || currentOrder.status === 'IN_PROGRESS'" class="action-section">
-            <h3>添加维修材料</h3>
-            <div class="form-group">
-              <label>材料名称</label>
-              <input type="text" v-model="materialForm.name" placeholder="例如: 机油滤芯" />
-            </div>
-            <div class="form-group">
-              <label>数量</label>
-              <input type="number" v-model="materialForm.quantity" min="1" />
-            </div>
-            <div class="form-group">
-              <label>单价 (元)</label>
-              <input type="number" v-model="materialForm.unitPrice" min="0" step="0.01" />
-            </div>
-            <div class="form-group">
-              <label>供应商</label>
-              <input type="text" v-model="materialForm.supplier" placeholder="例如: 汽配城" />
-            </div>
-            <button @click="handleAddMaterial" class="secondary-btn">添加材料</button>
-          </div>
+        <!-- 材料列表 -->
+        <div v-if="materials.length > 0" class="materials-section">
+          <h3>材料清单</h3>
+          <table class="materials-table">
+            <thead>
+              <tr>
+                <th>材料名称</th>
+                <th>数量</th>
+                <th>单价 (元)</th>
+                <th>总价 (元)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="material in materials" :key="material.materialId">
+                <td>{{ material.name }}</td>
+                <td>{{ material.quantity }}</td>
+                <td>{{ formatCurrency(material.unitPrice) }}</td>
+                <td>{{ formatCurrency(calculateMaterialCost(material)) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
       
-      <!-- 材料列表 -->
-      <div v-if="materials.length > 0" class="materials-section">
-        <h3>材料清单</h3>
-        <table class="materials-table">
-          <thead>
-            <tr>
-              <th>材料名称</th>
-              <th>数量</th>
-              <th>单价 (元)</th>
-              <th>总价 (元)</th>
-              <th>供应商</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="material in materials" :key="material.id">
-              <td>{{ material.name }}</td>
-              <td>{{ material.quantity }}</td>
-              <td>{{ material.unitPrice.toFixed(2) }}</td>
-              <td>{{ material.totalCost.toFixed(2) }}</td>
-              <td>{{ material.supplier }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="3" class="total-label">材料总价:</td>
-              <td colspan="2" class="total-value">{{ calculateTotalMaterialCost().toFixed(2) }} 元</td>
-            </tr>
-          </tfoot>
-        </table>
+      <!-- 集中的工单操作区域 -->
+      <div class="action-section">
+        <!-- 根据不同状态显示不同的操作按钮 -->
+        <div class="action-buttons">
+          <!-- 已分配状态 -->
+          <template v-if="currentOrder.status === 'ASSIGNED'">
+            <button @click="handleAccept" class="primary-btn">接受工单</button>
+            <button @click="openRejectDialog" class="danger-btn">拒绝工单</button>
+          </template>
+          
+          <!-- 已接受状态 -->
+          <template v-else-if="currentOrder.status === 'ACCEPTED'">
+            <button @click="handleStartRepair" class="primary-btn">开始维修</button>
+          </template>
+          
+          <!-- 维修中状态 -->
+          <template v-else-if="currentOrder.status === 'IN_PROGRESS'">
+            <button @click="openCompleteDialog" class="primary-btn">完成工单</button>
+            <button @click="openAddMaterialDialog" class="secondary-btn">添加维修材料</button>
+          </template>
+          
+          <!-- 已完成状态 -->
+          <template v-else-if="currentOrder.status === 'COMPLETED'">
+            <span class="status-message">此工单已完成</span>
+          </template>
+          
+          <!-- 已拒绝状态 -->
+          <template v-else-if="currentOrder.status === 'REJECTED'">
+            <span class="status-message">此工单已拒绝</span>
+          </template>
+        </div>
       </div>
     </div>
     
@@ -140,6 +115,56 @@
         <div class="modal-buttons">
           <button @click="showRejectDialog = false" class="cancel-btn">取消</button>
           <button @click="handleReject" class="confirm-btn">确认拒绝</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 完成工单对话框 -->
+    <div v-if="showCompleteDialog" class="modal-overlay">
+      <div class="modal">
+        <h3>完成工单</h3>
+        <div class="form-group">
+          <label>工时 (小时)</label>
+          <input type="number" v-model="completeForm.laborHours" min="0.5" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label>维修描述</label>
+          <textarea v-model="completeForm.description" rows="4" placeholder="详细描述维修过程和解决方案"></textarea>
+        </div>
+        <div class="form-group">
+          <label>维修建议</label>
+          <textarea v-model="completeForm.suggestion" rows="2" placeholder="给客户的后续维护建议"></textarea>
+        </div>
+        <div class="modal-buttons">
+          <button @click="showCompleteDialog = false" class="cancel-btn">取消</button>
+          <button @click="handleComplete" class="confirm-btn primary-color">提交完成</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 添加材料对话框 -->
+    <div v-if="showAddMaterialDialog" class="modal-overlay">
+      <div class="modal">
+        <h3>添加维修材料</h3>
+        <div class="form-group">
+          <label>材料名称</label>
+          <input type="text" v-model="materialForm.name" placeholder="例如: 机油滤芯" />
+        </div>
+        <div class="form-group">
+          <label>数量</label>
+          <input type="number" v-model="materialForm.quantity" min="1" />
+        </div>
+        <div class="form-group">
+          <label>单价 (元)</label>
+          <input type="number" v-model="materialForm.unitPrice" min="0" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>供应商</label>
+          <input type="text" v-model="materialForm.supplier" placeholder="例如: 车城" />
+        </div>
+        <div class="modal-buttons">
+          <button @click="showAddMaterialDialog = false" class="cancel-btn">取消</button>
+          <button @click="handleAddMaterial" class="confirm-btn secondary-color">添加材料</button>
         </div>
       </div>
     </div>
@@ -159,6 +184,8 @@ const workerStore = useWorkerStore()
 const loading = ref(true)
 const materials = ref<Material[]>([])
 const showRejectDialog = ref(false)
+const showCompleteDialog = ref(false)
+const showAddMaterialDialog = ref(false)
 const rejectReason = ref('')
 
 const completeForm = ref({
@@ -223,6 +250,25 @@ const openRejectDialog = () => {
   showRejectDialog.value = true
 }
 
+const openCompleteDialog = () => {
+  completeForm.value = {
+    laborHours: 1,
+    description: '',
+    suggestion: ''
+  }
+  showCompleteDialog.value = true
+}
+
+const openAddMaterialDialog = () => {
+  materialForm.value = {
+    name: '',
+    quantity: 1,
+    unitPrice: 0,
+    supplier: ''
+  }
+  showAddMaterialDialog.value = true
+}
+
 const handleReject = async () => {
   if (!currentOrder.value) return
   
@@ -241,6 +287,18 @@ const handleReject = async () => {
   }
 }
 
+const handleStartRepair = async () => {
+  if (!currentOrder.value) return
+  
+  try {
+    await workerStore.startOrder(currentOrder.value.orderId)
+    alert('已开始维修')
+  } catch (error) {
+    console.error('开始维修失败:', error)
+    alert('开始维修失败，请重试')
+  }
+}
+
 const handleComplete = async () => {
   if (!currentOrder.value) return
   
@@ -255,6 +313,7 @@ const handleComplete = async () => {
       description: completeForm.value.description,
       suggestion: completeForm.value.suggestion
     })
+    showCompleteDialog.value = false
     alert('工单已成功完成')
     router.push('/worker/orders')
   } catch (error) {
@@ -263,6 +322,19 @@ const handleComplete = async () => {
   }
 }
 
+// 添加获取材料列表的方法
+const fetchOrderMaterials = async () => {
+  if (!currentOrder.value) return
+  
+  try {
+    await workerStore.fetchMaterials(currentOrder.value.orderId)
+    materials.value = workerStore.materials
+  } catch (error) {
+    console.error('获取材料列表失败:', error)
+  }
+}
+
+// 修改handleAddMaterial方法，成功添加材料后刷新材料列表
 const handleAddMaterial = async () => {
   if (!currentOrder.value) return
   
@@ -272,17 +344,18 @@ const handleAddMaterial = async () => {
   }
   
   try {
-    const response = await workerStore.addMaterial(currentOrder.value.orderId, {
+    await workerStore.addMaterial(currentOrder.value.orderId, {
       name: materialForm.value.name,
       quantity: materialForm.value.quantity,
       unitPrice: materialForm.value.unitPrice,
       supplier: materialForm.value.supplier
     })
     
-    // 添加到本地材料列表
-    materials.value.push(response.data)
+    // 刷新材料列表
+    await fetchOrderMaterials()
     
-    // 清空表单
+    // 关闭弹窗并清空表单
+    showAddMaterialDialog.value = false
     materialForm.value = {
       name: '',
       quantity: 1,
@@ -297,8 +370,19 @@ const handleAddMaterial = async () => {
   }
 }
 
-const calculateTotalMaterialCost = () => {
-  return materials.value.reduce((sum, material) => sum + material.totalCost, 0)
+// Add a helper function to calculate material cost
+const calculateMaterialCost = (material: Material): number => {
+  // If totalCost exists, return it; otherwise calculate from quantity and unitPrice
+  return material.totalCost !== undefined ? 
+    material.totalCost : 
+    material.quantity * material.unitPrice
+}
+
+const formatCurrency = (value: number | undefined | null): string => {
+  if (value === undefined || value === null) {
+    return '0.00';
+  }
+  return value.toFixed(2);
 }
 
 onMounted(async () => {
@@ -308,9 +392,10 @@ onMounted(async () => {
       await workerStore.fetchAssignedOrders()
     }
     
-    // TODO: 实际应用中应该添加获取材料列表的API调用
-    // materials.value = await workerService.getMaterialsByOrderId(route.params.id)
-    
+    if (currentOrder.value) {
+      await fetchOrderMaterials()
+    }
+  
     loading.value = false
   } catch (error) {
     console.error('加载工单详情失败:', error)
@@ -379,7 +464,7 @@ onMounted(async () => {
   }
 }
 
-.info-card, .action-card {
+.info-card, .materials-card {
   background: #f9f9f9;
   border-radius: 8px;
   padding: 1.5rem;
@@ -429,17 +514,77 @@ onMounted(async () => {
 }
 
 .action-section {
-  margin-bottom: 2rem;
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
 }
 
-.action-section:last-child {
-  margin-bottom: 0;
+.centered-action-section {
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 800px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #eee;
+}
+
+.centered-action-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #4a5568;
 }
 
 .action-buttons {
   display: flex;
-  gap: 1rem;
+  justify-content: center;
+  gap: 1.5rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.primary-btn, .secondary-btn, .danger-btn {
+  padding: 0.75rem 1.75rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.primary-btn {
+  background: #667eea;
+  color: white;
+}
+
+.primary-btn:hover {
+  background: #5a6fd3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.secondary-btn {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.secondary-btn:hover {
+  background: #d5dce7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(74, 85, 104, 0.2);
+}
+
+.danger-btn {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.danger-btn:hover {
+  background: #ffe0e3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(211, 47, 47, 0.2);
 }
 
 .form-group {
@@ -485,14 +630,19 @@ onMounted(async () => {
 }
 
 .materials-section {
-  padding: 1.5rem;
-  border-top: 1px solid #eee;
+  margin-top: 1rem;
+}
+
+.no-materials {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  font-style: italic;
 }
 
 .materials-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
 }
 
 .materials-table th,
@@ -534,13 +684,21 @@ onMounted(async () => {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  width: 400px;
+  width: 500px;
   max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
 }
 
 .modal textarea {
   width: 100%;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
   padding: 0.5rem;
   border-radius: 4px;
   border: 1px solid #ddd;
@@ -550,6 +708,7 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .cancel-btn {
@@ -562,11 +721,24 @@ onMounted(async () => {
 }
 
 .confirm-btn {
-  background: #d32f2f;
-  color: white;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   border: none;
   cursor: pointer;
+  color: white;
+}
+
+.confirm-btn.primary-color {
+  background: #667eea;
+}
+
+.confirm-btn.secondary-color {
+  background: #4a5568;
+}
+
+.status-message {
+  font-style: italic;
+  color: #666;
+  padding: 0.5rem 0;
 }
 </style>

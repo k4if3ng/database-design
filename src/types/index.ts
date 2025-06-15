@@ -113,7 +113,7 @@ export interface LoginResponse {
 }
 
 export interface Material {
-  id: number
+  materialId: number
   orderId: number
   name: string
   quantity: number
@@ -185,8 +185,10 @@ export interface WorkerPerformance {
   totalHours: number
   totalEarnings: number
   efficiency: number
+  totalLaborCost: number
   completionRate: number
-  averageRating: number
+  customerSatisfaction: number
+  averageCompletionTime: number
   totalWorkHours: number
   OnTimeCompletionRate: number
 }
@@ -384,4 +386,24 @@ export interface SystemStatus {
   systemLoad: number;
   memoryUsage: number;
   diskUsage: number;
+}
+
+export interface SubmitOrder {
+  orderId: number
+  issue: string
+  createTime: string
+  assignTime?: string
+  acceptTime?: string
+  completeTime?: string
+  status: string
+  laborCost?: number
+  materialCost?: number
+  totalCost?: number
+  workerId?: number
+  workerName?: string
+  vehicleId: number
+  licensePlate: string
+  repairType?: string
+  materials?: Material[]
+  cannotReject?: boolean
 }

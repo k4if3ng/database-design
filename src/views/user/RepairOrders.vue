@@ -134,7 +134,7 @@ export default defineComponent({
         await storeSubmitFeedback({
           ...feedbackForm,
           rating: Number(feedbackForm.rating),
-          category: '用户反馈', // 请根据实际需求修改类别
+          category: Number(feedbackForm.rating) >= 4 ? 'POSITIVE_FEEDBACK' : Number(feedbackForm.rating) === 3 ? 'GENERAL_FEEDBACK' : 'NEGATIVE_FEEDBACK',
         })
         alert('反馈提交成功')
         closeFeedbackModal()

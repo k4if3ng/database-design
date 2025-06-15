@@ -66,23 +66,19 @@
             </div>
             <div class="stat-item">
               <span class="stat-label">总工作时长:</span>
-              <span class="stat-value">{{ performance.totalHours.toFixed(1) }} 小时</span>
+              <span class="stat-value">{{ performance?.totalHours }} 小时</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">工作效率:</span>
-              <span class="stat-value">{{ performance.efficiency.toFixed(2) }}</span>
+              <span class="stat-label">评价工作时长:</span>
+              <span class="stat-value">{{ performance?.averageCompletionTime }} 小时</span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">完成率:</span>
-              <span class="stat-value">{{ (performance.completionRate * 100).toFixed(1) }}%</span>
+              <span class="stat-label">总人工费:</span>
+              <span class="stat-value">{{ performance?.totalLaborCost }} </span>
             </div>
             <div class="stat-item">
-              <span class="stat-label">平均评分:</span>
-              <span class="stat-value">{{ performance.averageRating.toFixed(1) }}/5</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">准时完成率:</span>
-              <span class="stat-value">{{ (performance.OnTimeCompletionRate * 100).toFixed(1) }}%</span>
+              <span class="stat-label">客户满意度:</span>
+              <span class="stat-value">{{ performance?.customerSatisfaction }}</span>
             </div>
           </div>
           <div v-else class="no-data">
@@ -201,23 +197,6 @@
         </div>
       </div>
       
-      <!-- 评分反馈 -->
-      <div class="feedback-section">
-        <h2>客户评分与反馈</h2>
-        <div class="feedback-container">
-          <p class="feedback-placeholder">暂无客户评分与反馈数据</p>
-          <!-- 
-          实际项目中这里应该会展示来自客户的评分和评价内容
-          <div v-for="feedback in feedbacks" :key="feedback.id" class="feedback-item">
-            <div class="feedback-header">
-              <span class="feedback-rating">★★★★★</span>
-              <span class="feedback-date">{{ formatDate(feedback.date) }}</span>
-            </div>
-            <p class="feedback-content">{{ feedback.content }}</p>
-          </div>
-          -->
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -269,7 +248,6 @@ onMounted(async () => {
 .performance {
   min-height: 100vh;
   width: 80vw;
-  margin: 0 auto;
 }
 
 .loading {

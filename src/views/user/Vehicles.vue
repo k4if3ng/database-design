@@ -126,10 +126,10 @@
           <div class="form-group">
             <label for="repairType">维修类型</label>
             <select id="repairType" v-model="repairForm.repairType" required>
-              <option value="机修">机修</option>
-              <option value="电气">电气</option>
-              <option value="钣金">钣金</option>
-              <option value="喷漆">喷漆</option>
+              <option value="发动机维修">发动机维修</option>
+              <option value="电气维修">电气维修</option>
+              <option value="钣金喷漆">钣金喷漆</option>
+              <option value="新能源维修">新能源维修</option>
               <option value="其他">其他</option>
             </select>
           </div>

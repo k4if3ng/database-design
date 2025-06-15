@@ -18,10 +18,6 @@
         <p class="stat-number">{{ completedRepairs }}</p>
       </div>
 
-      <div class="stat-card">
-        <h3>平均评分</h3>
-        <p class="stat-number">{{ averageRating.toFixed(1) }}</p>
-      </div>
     </div>
 
     <div class="recent-orders">
@@ -62,11 +58,6 @@ const recentOrders = computed(() =>
 const completedRepairs = computed(() => 
   repairOrders.filter(order => order.status === 'COMPLETED').length
 )
-
-const averageRating = computed(() => {
-  // 计算已评价的维修工单Orders的平均评分
-  return 0
-})
 
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {

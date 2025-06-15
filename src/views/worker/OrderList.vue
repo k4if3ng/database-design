@@ -51,6 +51,10 @@
               <button @click="handleAccept(order.orderId)" class="accept-btn">接受</button>
               <button @click="openRejectDialog(order.orderId)" class="reject-btn">拒绝</button>
             </div>
+          
+            <div class="action-buttons" v-if="order.status === 'ACCEPTED'">
+              <button @click="handleStartRepair(order.orderId)" class="start-btn">开始维修</button>
+            </div>
           </div>
         </div>
       </div>
@@ -162,6 +166,16 @@ const handleReject = async () => {
       console.error('拒绝工单失败:', error)
       alert('拒绝工单失败，请重试')
     }
+  }
+}
+
+const handleStartRepair = async (orderId: number) => {
+  try {
+    await workerStore.startOrder(orderId)
+    alert('已开始维修')
+  } catch (error) {
+    console.error('开始维修失败:', error)
+    alert('开始维修失败，请重试')
   }
 }
 

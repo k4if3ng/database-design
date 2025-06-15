@@ -17,6 +17,10 @@ export const workerService = {
     return api.put(`/v1/repair-orders/${orderId}/rejection`, data).then(response => response.data)
   },
 
+  async startOrder(orderId: number): Promise<ApiResponse<ProcessOrderRes>> {
+    return api.put(`/v1/repair-orders/${orderId}/start`).then((res) => res.data)
+  },
+
   // 完成工单
   async completeOrder(orderId: number,
     data: {
@@ -35,7 +39,12 @@ export const workerService = {
       unitPrice: number
       supplier: string
   }): Promise<ApiResponse<Material>> {
-    return api.post('/v1/repair-orders/${orderId}/materials', data).then((res) => res.data)
+    return api.post(`/v1/repair-orders/${orderId}/materials`, data).then((res) => res.data)
+  },
+
+  // 获取材料列表
+  async getMaterials(orderId: number): Promise<ApiResponse<Material[]>> {
+    return api.get(`/v1/repair-orders/${orderId}/materials`).then((res) => res.data)
   },
 
   // 查询工资收入
@@ -50,7 +59,7 @@ export const workerService = {
 
   // 结算记录
   async getSettlementRecords(): Promise<ApiResponse<MonthlySettlement[]>> {
-    return api.get('/worker/my-settlements').then((res) => res.data)
+    return api.get('/v1/settlements').then((res) => res.data)
   },
 
   // 获取维修记录
