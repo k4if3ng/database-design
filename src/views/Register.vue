@@ -111,6 +111,7 @@ const handleRegister = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  width: 100vw;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -119,7 +120,6 @@ const handleRegister = async () => {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 50%;
   max-width: 800px;
   min-width: 600px;
 }

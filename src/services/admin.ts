@@ -10,7 +10,7 @@ import type {
   VehicleTypeStats,
   CostAnalysis,
   NegativeFeedback,
-  SpecialtyWorkload,
+  SpecialtyWorkloadStats,
   PendingTasks,
   RollBack,
   BatchDeleteOrders,
@@ -67,7 +67,7 @@ export const adminService = {
     period: string
     year: number
     month?: number
-  }): Promise<ApiResponse<CostAnalysis>> {
+  }): Promise<CostAnalysis> {
     return api.get('/statistics/cost-analysis', { params }).then((res) => res.data)
   },
 
@@ -76,7 +76,7 @@ export const adminService = {
     rating?: number
     startDate?: string
     endDate?: string
-  }): Promise<ApiResponse<NegativeFeedback>> {
+  }): Promise<NegativeFeedback> {
     return api.get('/statistics/negative-feedback', { params }).then((res) => res.data)
   },
 
@@ -84,7 +84,7 @@ export const adminService = {
   async getSpecialtyWorkload(params?: {
     startDate?: string
     endDate?: string
-  }): Promise<ApiResponse<SpecialtyWorkload[]>> {
+  }): Promise<SpecialtyWorkloadStats> {
     return api.get('/statistics/specialty-workload', { params }).then((res) => res.data)
   },
 

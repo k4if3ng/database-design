@@ -14,12 +14,11 @@
           </div>
           <div class="log-details">
             <p><strong>描述:</strong> {{ log.issue }}</p>
-            <p><strong>维修结果:</strong> {{ log.repairDescription }}</p>
+            <p><strong>维修结果:</strong> {{ log.repairResult }}</p>
             <p><strong>提交时间:</strong> {{ formatDate(log.submitTime) }}</p>
             <p><strong>完成时间:</strong> {{ formatDate(log.completionTime) }}</p>
-            <p><strong>材料费:</strong> {{ formatPrice(log.materialsCost) }}</p>
-            <p><strong>人工费:</strong> {{ formatPrice(log.laborCost) }}</p>
             <p><strong>总费用:</strong> {{ formatPrice(log.totalCost) }}</p>
+            <p><strong>评分:</strong> {{ log.rating }}</p>
             <p><strong>车辆信息:</strong> {{ log.licensePlate }}</p>
           </div>
         </div>

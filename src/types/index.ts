@@ -76,6 +76,7 @@ export interface RepairLog {
   licensePlate: string
   issue: string
   repairDescription: string
+  repairResult: string
   materialsCost: number
   laborCost: number
   totalCost: number
@@ -83,6 +84,7 @@ export interface RepairLog {
   workerName: string
   submitTime: string
   completionTime: string
+  rating: number
   // worker
   vehicleInfo: {
     licensePlate: string;
@@ -248,13 +250,23 @@ export interface VehicleTypeStats {
 export interface CostAnalysis {
   period: string;
   totalCost: number;
-  laborCostRatio: number;
-  materialCostRatio: number;
-  breakdown: {
+  laborCost: number;
+  laborCostPercentage: number;
+  materialCost: number;
+  materialCostPercentage: number;
+  averageCostPerOrder: number;
+  costTrend: {
     category: string;
     totalCost: number;
     laborCost: number;
     materialCost: number;
+  }[];
+  costByRepairType: {
+    repairType: string;
+    totalCost: number;
+    laborCost: number;
+    materialCost: number;
+    averageCostPerOrder: number;
   }[];
 }
 
@@ -267,33 +279,78 @@ export interface WorkerStats {
 }
 
 export interface NegativeFeedback {
-  totalNegativeFeedback: number;
+  total: number;
+  averageSeverity: number;
   feedbacks: {
     orderId: number;
-    workerId: number;
-    workerName: string;
-    rating: number;
+    feedbackId: number;
+    feedbackDate: string;
+    severity: number;
     comment: string;
     category: string;
-    submitTime: string;
+    worker: {
+      id: number;
+      name: string;
+      specialty: string;
+      negativeOrderCount: number;
+    };
+    vehicle: {
+      id: number | null;
+      licensePlate: string | null;
+      type: string;
+    };
+    resolution: {
+      status: string;
+      actionTaken: string;
+      resolvedDate: string | null;
+    };
+  }[];
+  categories: {
+    category: string;
+    count: number;
+    percentage: number;
   }[];
   workerStats: {
     workerId: number;
     workerName: string;
-    negativeFeedbackCount: number;
-    totalFeedbackCount: number;
-    negativeRatio: number;
+    negativeCount: number;
+    averageSeverity: number;
+    percentage: number;
   }[];
 }
 
-export interface SpecialtyWorkload {
+export interface SpecialtyWorkloadStat {
   specialty: string;
-  workerCount: number;
-  receivedTasks: number;
-  completedTasks: number;
-  taskRatio: number;
-  completionRate: number;
-  averageHoursPerTask: number;
+  assignedCount: number;
+  completedCount: number;
+  rejectedCount: number;
+  inProgressCount: number;
+  assignedPercentage: number;
+  completedPercentage: number;
+  averageCompletionTime: string;
+  averageCost: number;
+  workers: number;
+  orderPerWorker: number;
+  trend: {
+    month: string;
+    assigned: number;
+    completed: number;
+  }[];
+}
+
+export interface SpecialtyWorkloadRecommendation {
+  specialty: string;
+  recommendedHires: number;
+  reason: string;
+}
+
+export interface SpecialtyWorkloadStats {
+  totalOrders: number;
+  dateRange: string;
+  specialtyStats: SpecialtyWorkloadStat[];
+  recommendations: {
+    recruiting: SpecialtyWorkloadRecommendation[];
+  };
 }
 
 export interface PendingTasks {

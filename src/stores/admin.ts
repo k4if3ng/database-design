@@ -10,7 +10,7 @@ import type {
   VehicleTypeStats,
   CostAnalysis,
   NegativeFeedback,
-  SpecialtyWorkload,
+  SpecialtyWorkloadStats,
   PendingTasks,
   RollBack,
   BatchDeleteOrders,
@@ -32,7 +32,7 @@ export const useAdminStore = defineStore('admin', {
     vehicleTypeStats: null as VehicleTypeStats | null,
     costAnalysis: null as CostAnalysis | null,
     negativeFeedback: null as NegativeFeedback | null,
-    specialtyWorkload: [] as SpecialtyWorkload[],
+    specialtyWorkloadStats: [] as SpecialtyWorkloadStats[],
     pendingTasks: null as PendingTasks | null,
     auditLogs: null as AuditLog | null,
     systemHealth: null as SystemHealth | null,
@@ -157,9 +157,7 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getCostAnalysis(params)
-        if (response.success) {
-          this.costAnalysis = response.data
-        }
+        this.costAnalysis = response
         return response
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取成本分析失败'
@@ -178,9 +176,7 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getNegativeFeedback(params)
-        if (response.success) {
-          this.negativeFeedback = response.data
-        }
+        this.negativeFeedback = response
         return response
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取负面反馈统计失败'
@@ -198,9 +194,7 @@ export const useAdminStore = defineStore('admin', {
       this.error = null
       try {
         const response = await adminService.getSpecialtyWorkload(params)
-        if (response.success) {
-          this.specialtyWorkload = response.data
-        }
+        this.specialtyWorkloadStats = Array.isArray(response) ? response : [response]
         return response
       } catch (error) {
         this.error = error instanceof Error ? error.message : '获取工种工作量统计失败'
@@ -391,7 +385,7 @@ export const useAdminStore = defineStore('admin', {
       this.vehicleTypeStats = null
       this.costAnalysis = null
       this.negativeFeedback = null
-      this.specialtyWorkload = []
+      this.specialtyWorkloadStats = []
       this.pendingTasks = null
       this.auditLogs = null
       this.systemHealth = null

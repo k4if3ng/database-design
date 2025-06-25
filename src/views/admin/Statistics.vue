@@ -53,7 +53,7 @@
       <div class="analysis-controls">
         <select v-model="costAnalysisParams.period" @change="fetchCostAnalysis">
           <option value="month">按月</option>
-          <option value="quarter">按季度</option>
+          <!-- <option value="quarter">按季度</option> -->
           <option value="year">按年</option>
         </select>
         <input 
@@ -81,183 +81,163 @@
         </div>
         <div class="cost-card">
           <h4>人工成本</h4>
-          <p class="cost-amount">￥{{ (getTotalLaborCost() || 0).toFixed(2) }}</p>
-          <p class="cost-ratio">{{ (costAnalysis?.laborCostRatio || 0).toFixed(1) }}%</p>
+          <p class="cost-amount">￥{{ (costAnalysis?.laborCost || 0).toFixed(2) }}</p>
+          <p class="cost-ratio">{{ (costAnalysis?.laborCostPercentage || 0).toFixed(1) }}%</p>
         </div>
         <div class="cost-card">
           <h4>材料成本</h4>
-          <p class="cost-amount">￥{{ (getTotalMaterialCost() || 0).toFixed(2) }}</p>
-          <p class="cost-ratio">{{ (costAnalysis?.materialCostRatio || 0).toFixed(1) }}%</p>
+          <p class="cost-amount">￥{{ (costAnalysis?.materialCost || 0).toFixed(2) }}</p>
+          <p class="cost-ratio">{{ (costAnalysis?.materialCostPercentage || 0).toFixed(1) }}%</p>
         </div>
-      </div>
-      <div v-if="costAnalysis?.breakdown" class="cost-breakdown">
-        <h4>成本明细</h4>
-        <div class="breakdown-table">
-          <table>
-            <thead>
-              <tr>
-                <th>类别</th>
-                <th>总成本</th>
-                <th>人工成本</th>
-                <th>材料成本</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in costAnalysis.breakdown" :key="item.category">
-                <td>{{ item.category }}</td>
-                <td>￥{{ item.totalCost.toFixed(2) }}</td>
-                <td>￥{{ item.laborCost.toFixed(2) }}</td>
-                <td>￥{{ item.materialCost.toFixed(2) }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="cost-card">
+          <h4>平均成本</h4>
+          <p class="cost-amount">￥{{ (costAnalysis?.averageCostPerOrder|| 0).toFixed(2) }}</p>
         </div>
       </div>
     </div>
 
     <!-- 车型维修统计 -->
-    <!-- 车型维修统计 -->
-<div class="vehicle-stats-section">
-  <h2>车型维修统计</h2>
-  <div class="vehicle-stats-summary" v-if="vehicleTypeStats">
-    <div class="summary-info">
-      <div class="summary-card">
-        <h4>总维修次数</h4>
-        <p class="big-number">{{ vehicleTypeStats.summary.totalRepairs }}</p>
+    <div class="vehicle-stats-section">
+      <h2>车型维修统计</h2>
+      <div class="vehicle-stats-summary" v-if="vehicleTypeStats">
+        <div class="summary-info">
+          <div class="summary-card">
+            <h4>总维修次数</h4>
+            <p class="big-number">{{ vehicleTypeStats.summary.totalRepairs }}</p>
+          </div>
+          <div class="summary-card">
+            <h4>车型种类</h4>
+            <p class="big-number">{{ vehicleTypeStats.summary.totalVehicleTypes }}</p>
+          </div>
+          <div class="summary-card">
+            <h4>统计时间范围</h4>
+            <p class="date-range">{{ vehicleTypeStats.summary.dateRange }}</p>
+          </div>
+        </div>
       </div>
-      <div class="summary-card">
-        <h4>车型种类</h4>
-        <p class="big-number">{{ vehicleTypeStats.summary.totalVehicleTypes }}</p>
+      
+      <div class="vehicle-stats-table">
+        <div v-if="loadingVehicleStats" class="loading">加载中...</div>
+        <table v-else-if="vehicleTypeStats?.vehicleTypeStats?.length">
+          <thead>
+            <tr>
+              <th>车型</th>
+              <th>维修次数</th>
+              <th>占比</th>
+              <th>平均费用</th>
+              <th>维修频率</th>
+              <th>常见问题</th>
+              <th>趋势</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="stat in vehicleTypeStats.vehicleTypeStats" :key="stat.vehicleType">
+              <td>{{ stat.vehicleType }}</td>
+              <td>{{ stat.repairCount }}</td>
+              <td>
+                <span class="percentage">{{ stat.percentage.toFixed(1) }}%</span>
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill" 
+                    :style="{ width: `${stat.percentage}%` }"
+                  ></div>
+                </div>
+              </td>
+              <td>￥{{ stat.averageCost.toFixed(2) }}</td>
+              <td>
+                <span class="frequency-badge" :class="getFrequencyClass(stat.repairFrequency)">
+                  {{ stat.repairFrequency }}
+                </span>
+              </td>
+              <td>
+                <div class="common-issues">
+                  <span 
+                    v-for="issue in stat.commonIssues.slice(0, 3)" 
+                    :key="issue.issueType"
+                    class="issue-tag"
+                    :title="`${issue.count}次 (${issue.percentage.toFixed(1)}%)`"
+                  >
+                    {{ issue.issueType }}
+                  </span>
+                  <span v-if="stat.commonIssues.length > 3" class="more-issues">
+                    +{{ stat.commonIssues.length - 3 }}
+                  </span>
+                </div>
+              </td>
+              <td>
+                <div class="trend-chart">
+                  <div 
+                    v-for="(trendItem, index) in stat.trend.slice(-6)" 
+                    :key="index"
+                    class="trend-bar"
+                    :style="{ 
+                      height: `${getTrendBarHeight(trendItem, stat.trend)}%`,
+                      backgroundColor: getTrendBarColor(trendItem, stat.trend, index)
+                    }"
+                    :title="`${trendItem.month}: ${trendItem.count}次`"
+                  ></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-else class="empty-state">暂无车型统计数据</div>
       </div>
-      <div class="summary-card">
-        <h4>统计时间范围</h4>
-        <p class="date-range">{{ vehicleTypeStats.summary.dateRange }}</p>
-      </div>
-    </div>
-  </div>
-  
-  <div class="vehicle-stats-table">
-    <div v-if="loadingVehicleStats" class="loading">加载中...</div>
-    <table v-else-if="vehicleTypeStats?.vehicleTypeStats?.length">
-      <thead>
-        <tr>
-          <th>车型</th>
-          <th>维修次数</th>
-          <th>占比</th>
-          <th>平均费用</th>
-          <th>维修频率</th>
-          <th>常见问题</th>
-          <th>趋势</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="stat in vehicleTypeStats.vehicleTypeStats" :key="stat.vehicleType">
-          <td>{{ stat.vehicleType }}</td>
-          <td>{{ stat.repairCount }}</td>
-          <td>
-            <span class="percentage">{{ stat.percentage.toFixed(1) }}%</span>
-            <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                :style="{ width: `${stat.percentage}%` }"
-              ></div>
-            </div>
-          </td>
-          <td>￥{{ stat.averageCost.toFixed(2) }}</td>
-          <td>
-            <span class="frequency-badge" :class="getFrequencyClass(stat.repairFrequency)">
-              {{ stat.repairFrequency }}
-            </span>
-          </td>
-          <td>
-            <div class="common-issues">
-              <span 
-                v-for="issue in stat.commonIssues.slice(0, 3)" 
-                :key="issue.issueType"
-                class="issue-tag"
-                :title="`${issue.count}次 (${issue.percentage.toFixed(1)}%)`"
-              >
-                {{ issue.issueType }}
-              </span>
-              <span v-if="stat.commonIssues.length > 3" class="more-issues">
-                +{{ stat.commonIssues.length - 3 }}
-              </span>
-            </div>
-          </td>
-          <td>
-            <div class="trend-chart">
-              <div 
-                v-for="(trendItem, index) in stat.trend.slice(-6)" 
-                :key="index"
-                class="trend-bar"
-                :style="{ 
-                  height: `${getTrendBarHeight(trendItem, stat.trend)}%`,
-                  backgroundColor: getTrendBarColor(trendItem, stat.trend, index)
-                }"
-                :title="`${trendItem.month}: ${trendItem.count}次`"
-              ></div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else class="empty-state">暂无车型统计数据</div>
-  </div>
 
-  <!-- 详细问题分析 -->
-  <div v-if="selectedVehicleType" class="vehicle-detail-analysis">
-    <h3>{{ selectedVehicleType.vehicleType }} 详细分析</h3>
-    <div class="detail-tabs">
-      <button 
-        :class="['tab-btn', { active: activeTab === 'issues' }]"
-        @click="activeTab = 'issues'"
-      >
-        常见问题分析
-      </button>
-      <button 
-        :class="['tab-btn', { active: activeTab === 'trend' }]"
-        @click="activeTab = 'trend'"
-      >
-        维修趋势
-      </button>
-    </div>
-    
-    <div v-if="activeTab === 'issues'" class="issues-analysis">
-      <div class="issues-chart">
-        <div 
-          v-for="issue in selectedVehicleType.commonIssues" 
-          :key="issue.issueType"
-          class="issue-bar"
-        >
-          <div class="issue-label">{{ issue.issueType }}</div>
-          <div class="issue-progress">
+      <!-- 详细问题分析 -->
+      <div v-if="selectedVehicleType" class="vehicle-detail-analysis">
+        <h3>{{ selectedVehicleType.vehicleType }} 详细分析</h3>
+        <div class="detail-tabs">
+          <button 
+            :class="['tab-btn', { active: activeTab === 'issues' }]"
+            @click="activeTab = 'issues'"
+          >
+            常见问题分析
+          </button>
+          <button 
+            :class="['tab-btn', { active: activeTab === 'trend' }]"
+            @click="activeTab = 'trend'"
+          >
+            维修趋势
+          </button>
+        </div>
+        
+        <div v-if="activeTab === 'issues'" class="issues-analysis">
+          <div class="issues-chart">
             <div 
-              class="issue-progress-fill"
-              :style="{ width: `${issue.percentage}%` }"
-            ></div>
-            <span class="issue-stats">{{ issue.count }}次 ({{ issue.percentage.toFixed(1) }}%)</span>
+              v-for="issue in selectedVehicleType.commonIssues" 
+              :key="issue.issueType"
+              class="issue-bar"
+            >
+              <div class="issue-label">{{ issue.issueType }}</div>
+              <div class="issue-progress">
+                <div 
+                  class="issue-progress-fill"
+                  :style="{ width: `${issue.percentage}%` }"
+                ></div>
+                <span class="issue-stats">{{ issue.count }}次 ({{ issue.percentage.toFixed(1) }}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="activeTab === 'trend'" class="trend-analysis">
+          <div class="trend-chart-large">
+            <div 
+              v-for="(trendItem, index) in selectedVehicleType.trend" 
+              :key="index"
+              class="trend-bar-large"
+              :style="{ 
+                height: `${getTrendBarHeight(trendItem, selectedVehicleType.trend)}%`
+              }"
+            >
+              <div class="trend-value">{{ trendItem.count }}</div>
+              <div class="trend-month">{{ trendItem.month }}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <div v-if="activeTab === 'trend'" class="trend-analysis">
-      <div class="trend-chart-large">
-        <div 
-          v-for="(trendItem, index) in selectedVehicleType.trend" 
-          :key="index"
-          class="trend-bar-large"
-          :style="{ 
-            height: `${getTrendBarHeight(trendItem, selectedVehicleType.trend)}%`
-          }"
-        >
-          <div class="trend-value">{{ trendItem.count }}</div>
-          <div class="trend-month">{{ trendItem.month }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
     <!-- 工种工作量统计 -->
     <div class="specialty-workload-section">
@@ -274,41 +254,68 @@
           @change="fetchSpecialtyWorkload"
         >
       </div>
-      <div class="workload-cards">
-        <div 
-          v-for="workload in specialtyWorkload" 
-          :key="workload.specialty"
-          class="workload-card"
-        >
-          <h4>{{ workload.specialty }}</h4>
-          <div class="workload-stats">
-            <div class="stat-item">
-              <span class="label">人员数量:</span>
-              <span class="value">{{ workload.workerCount }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">接收任务:</span>
-              <span class="value">{{ workload.receivedTasks }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">完成任务:</span>
-              <span class="value">{{ workload.completedTasks }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">完成率:</span>
-              <span class="value">{{ (workload.completionRate * 100).toFixed(1) }}%</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">平均工时:</span>
-              <span class="value">{{ workload.averageHoursPerTask.toFixed(1) }}h</span>
+      <div v-if="specialtyWorkloadStats">
+        <div class="workload-summary">
+          <span>统计区间：{{ specialtyWorkloadStats.dateRange }}</span>
+          <span>总工单数：{{ specialtyWorkloadStats.totalOrders }}</span>
+        </div>
+        <div class="workload-cards">
+          <div 
+            v-for="workload in specialtyWorkloadStats.specialtyStats" 
+            :key="workload.specialty"
+            class="workload-card"
+          >
+            <h4>{{ workload.specialty }}</h4>
+            <div class="workload-stats">
+              <div class="stat-item">
+                <span class="label">人员数量:</span>
+                <span class="value">{{ workload.workers }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">分配工单:</span>
+                <span class="value">{{ workload.assignedCount }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">完成工单:</span>
+                <span class="value">{{ workload.completedCount }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">分配率:</span>
+                <span class="value">{{ workload.assignedPercentage.toFixed(1) }}%</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">完成率:</span>
+                <span class="value">{{ workload.completedPercentage.toFixed(1) }}%</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">平均完成时间:</span>
+                <span class="value">{{ workload.averageCompletionTime }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">平均成本:</span>
+                <span class="value">￥{{ workload.averageCost.toFixed(2) }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="label">人均工单:</span>
+                <span class="value">{{ workload.orderPerWorker }}</span>
+              </div>
             </div>
           </div>
         </div>
+        <div v-if="specialtyWorkloadStats.recommendations?.recruiting?.length" class="workload-recommendations">
+          <h4>招聘建议</h4>
+          <ul>
+            <li v-for="rec in specialtyWorkloadStats.recommendations.recruiting" :key="rec.specialty">
+              {{ rec.specialty }}：建议招聘 {{ rec.recommendedHires }} 人，原因：{{ rec.reason }}
+            </li>
+          </ul>
+        </div>
       </div>
+      <div v-else class="empty-state">暂无工种工作量数据</div>
     </div>
 
     <!-- 负面反馈统计 -->
-    <div class="negative-feedback-section">
+<div class="negative-feedback-section">
       <h2>负面反馈统计</h2>
       <div class="feedback-controls">
         <select v-model="feedbackParams.rating" @change="fetchNegativeFeedback">
@@ -331,7 +338,10 @@
       <div class="feedback-summary">
         <div class="summary-card">
           <h4>负面反馈总数</h4>
-          <p class="big-number">{{ negativeFeedback?.totalNegativeFeedback || 0 }}</p>
+          <p class="big-number">{{ negativeFeedback?.total || 0 }}</p>
+          <div v-if="negativeFeedback">
+            <span>平均严重程度: {{ negativeFeedback.averageSeverity?.toFixed(1) }}</span>
+          </div>
         </div>
         <div class="worker-feedback-stats">
           <h4>维修工负面反馈统计</h4>
@@ -341,18 +351,18 @@
                 <tr>
                   <th>维修工</th>
                   <th>负面反馈数</th>
-                  <th>总反馈数</th>
+                  <th>平均严重程度</th>
                   <th>负面比例</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="stat in negativeFeedback.workerStats" :key="stat.workerId">
                   <td>{{ stat.workerName }}</td>
-                  <td>{{ stat.negativeFeedbackCount }}</td>
-                  <td>{{ stat.totalFeedbackCount }}</td>
+                  <td>{{ stat.negativeCount }}</td>
+                  <td>{{ stat.averageSeverity.toFixed(1) }}</td>
                   <td>
-                    <span :class="['ratio', getRatioClass(stat.negativeRatio)]">
-                      {{ (stat.negativeRatio * 100).toFixed(1) }}%
+                    <span :class="['ratio', getRatioClass(stat.percentage / 100)]">
+                      {{ stat.percentage.toFixed(1) }}%
                     </span>
                   </td>
                 </tr>
@@ -362,28 +372,67 @@
           </div>
         </div>
       </div>
+      <div v-if="negativeFeedback?.feedbacks?.length">
+        <h4>负面反馈详情</h4>
+        <table class="breakdown-table">
+          <thead>
+            <tr>
+              <th>工单号</th>
+              <th>反馈ID</th>
+              <th>反馈日期</th>
+              <th>严重程度</th>
+              <th>维修工</th>
+              <th>工种</th>
+              <th>车型</th>
+              <th>内容</th>
+              <th>处理状态</th>
+              <th>处理动作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="fb in negativeFeedback.feedbacks" :key="fb.feedbackId">
+              <td>{{ fb.orderId }}</td>
+              <td>{{ fb.feedbackId }}</td>
+              <td>{{ fb.feedbackDate }}</td>
+              <td>{{ fb.severity }}</td>
+              <td>{{ fb.worker?.name }}</td>
+              <td>{{ fb.worker?.specialty }}</td>
+              <td>{{ fb.vehicle?.type }}</td>
+              <td>{{ fb.comment }}</td>
+              <td>{{ fb.resolution?.status }}</td>
+              <td>{{ fb.resolution?.actionTaken }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="negativeFeedback?.categories?.length">
+        <h4>反馈分类统计</h4>
+        <table class="breakdown-table">
+          <thead>
+            <tr>
+              <th>分类</th>
+              <th>数量</th>
+              <th>占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="cat in negativeFeedback.categories" :key="cat.category">
+              <td>{{ cat.category }}</td>
+              <td>{{ cat.count }}</td>
+              <td>{{ cat.percentage.toFixed(1) }}%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- 待处理任务统计 -->
     <div class="pending-tasks-section">
-      <h2>待处理任务统计</h2>
+      <h2>待分配任务统计</h2>
       <div class="pending-summary">
         <div class="summary-card">
-          <h4>总待处理任务</h4>
+          <h4>总待分配任务</h4>
           <p class="big-number">{{ pendingTasks?.totalPendingTasks || 0 }}</p>
-        </div>
-        <div class="status-breakdown">
-          <h4>按状态分布</h4>
-          <div class="status-cards">
-            <div 
-              v-for="(count, status) in pendingTasks?.byStatus" 
-              :key="status"
-              class="status-card"
-            >
-              <span class="status-name">{{ getStatusText(String(status)) }}</span>
-              <span class="status-count">{{ count }}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -397,7 +446,7 @@ import type {
   AdminStatisticsOverview, 
   VehicleTypeStats, 
   CostAnalysis, 
-  SpecialtyWorkload, 
+  SpecialtyWorkloadStats, 
   NegativeFeedback, 
   PendingTasks 
 } from '@/types'
@@ -409,7 +458,8 @@ const loadingVehicleStats = ref(false)
 // 统计数据
 const statisticsOverview = ref<AdminStatisticsOverview | null>(null)
 const costAnalysis = ref<CostAnalysis | null>(null)
-const specialtyWorkload = ref<SpecialtyWorkload[]>([])
+// const specialtyWorkload = ref<SpecialtyWorkload[]>([]) // 删除旧变量
+const specialtyWorkloadStats = ref<SpecialtyWorkloadStats | null>(null)
 const negativeFeedback = ref<NegativeFeedback | null>(null)
 const pendingTasks = ref<PendingTasks | null>(null)
 const vehicleTypeStats = ref<VehicleTypeStats | null>(null)
@@ -439,17 +489,6 @@ const completionRate = computed(() => {
   if (!statisticsOverview.value || statisticsOverview.value.totalRepairOrders === 0) return 0
   return ((statisticsOverview.value.completedRepairOrders / statisticsOverview.value.totalRepairOrders) * 100).toFixed(1)
 })
-
-// 方法
-const getTotalLaborCost = () => {
-  if (!costAnalysis.value?.breakdown) return 0
-  return costAnalysis.value.breakdown.reduce((sum, item) => sum + item.laborCost, 0)
-}
-
-const getTotalMaterialCost = () => {
-  if (!costAnalysis.value?.breakdown) return 0
-  return costAnalysis.value.breakdown.reduce((sum, item) => sum + item.materialCost, 0)
-}
 
 const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
@@ -521,9 +560,7 @@ const fetchVehicleStats = async () => {
 const fetchCostAnalysis = async () => {
   try {
     const response = await adminStore.fetchCostAnalysis(costAnalysisParams.value)
-    if (response.success) {
-      costAnalysis.value = response.data
-    }
+    costAnalysis.value = response
   } catch (error) {
     console.error('获取成本分析失败:', error)
   }
@@ -536,9 +573,7 @@ const fetchSpecialtyWorkload = async () => {
       ...(workloadParams.value.endDate && { endDate: workloadParams.value.endDate })
     }
     const response = await adminStore.fetchSpecialtyWorkload(params)
-    if (response.success) {
-      specialtyWorkload.value = response.data
-    }
+    specialtyWorkloadStats.value = response
   } catch (error) {
     console.error('获取工种工作量失败:', error)
   }
@@ -552,9 +587,7 @@ const fetchNegativeFeedback = async () => {
       ...(feedbackParams.value.endDate && { endDate: feedbackParams.value.endDate })
     }
     const response = await adminStore.fetchNegativeFeedback(params)
-    if (response.success) {
-      negativeFeedback.value = response.data
-    }
+    negativeFeedback.value = response
   } catch (error) {
     console.error('获取负面反馈失败:', error)
   }
